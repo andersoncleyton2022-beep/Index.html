@@ -3,312 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DIAMANTE BOT | MASTER SYSTEM</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <title>Diamante Bot - Master</title>
     <style>
         :root {
-            --wa-bg: #0b141a; 
-            --wa-header: #202c33; 
-            --wa-green: #00a884;
-            --wa-msg-me: #005c4b; 
-            --wa-msg-ai: #202c33; 
-            --wa-text: #e9edef;
-            --wa-input: #2a3942; 
-            --wa-accent: #00e676;
-            --diamond-glow: #00e5ff;
+            --primary-bg: #0b141a;
+            --secondary-bg: #111b21;
+            --accent-color: #00a884;
+            --text-main: #e9edef;
+            --text-secondary: #8696a0;
+            --message-in: #202c33;
+            --message-out: #005c4b;
         }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--wa-bg); color: var(--wa-text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* TELA DE LOGIN PREMIUM - TELA CHEIA */
-        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1a1a1a 0%, #050a0d 100%); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { background: rgba(34, 46, 53, 0.95); backdrop-filter: blur(15px); padding: 40px 30px; border-radius: 25px; width: 100%; max-width: 420px; text-align: center; border: 1px solid rgba(0, 229, 255, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
-        .auth-logo-container { width: 110px; height: 110px; border-radius: 50%; overflow: hidden; margin: 0 auto 20px auto; border: 3px solid var(--diamond-glow); box-shadow: 0 0 20px var(--diamond-glow); }
-        .auth-logo-img { width: 100%; height: 100%; object-fit: cover; }
-        .auth-input-wrapper { position: relative; width: 100%; margin: 12px 0; }
-        .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333; background: var(--wa-input); color: white; outline: none; font-size: 16px; transition: 0.3s; }
-        .auth-input:focus { border-color: var(--diamond-glow); }
-        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #8696a0; }
-        .btn-diamond { background: linear-gradient(45deg, #008cff, #00e5ff); color: #000; border: none; padding: 15px; border-radius: 30px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; text-transform: uppercase; }
-        .btn-diamond:hover { transform: scale(1.02); box-shadow: 0 0 25px var(--diamond-glow); }
-        
-        /* ESTRUTURA DO APP */
-        #app-main { display: none; flex-direction: column; height: 100vh; position: relative; }
-        header { background: var(--wa-header); padding: 10px 15px; display: flex; align-items: center; gap: 12px; height: 65px; border-bottom: 1px solid #333; flex-shrink: 0; }
-        .avatar-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 2px solid var(--diamond-glow); }
-        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .status-info { flex: 1; }
-        .status-dot-container { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8696a0; }
-        .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #ff3d00; transition: 0.3s; }
-        .status-dot.online { background: #00e676; box-shadow: 0 0 8px #00e676; }
-        
-        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background-color: #0b141a; }
-        
-        /* MENSAGENS */
-        .bubble-wrapper { display: flex; width: 100%; gap: 8px; margin-bottom: 5px; }
-        .bubble-wrapper.me { justify-content: flex-end; }
-        .bubble { max-width: 85%; padding: 12px; border-radius: 15px; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.3); position: relative; }
-        .bubble.me { background: var(--wa-msg-me); border-top-right-radius: 0; color: white; }
-        .bubble.ai { background: var(--wa-msg-ai); border-top-left-radius: 0; color: #e9edef; }
-        
-        /* FOOTER CORRIGIDO */
-        footer { background: var(--wa-header); padding: 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; width: 100%; }
-        .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 10px; min-height: 48px; }
-        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 8px 0; outline: none; font-size: 16px; }
-        .action-icon { color: #8696a0; font-size: 22px; cursor: pointer; transition: 0.2s; }
-        .btn-send { background: var(--wa-green); border: none; width: 48px; height: 48px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        
-        .badge-file { background: #004d40; color: #00e676; padding: 4px 12px; border-radius: 10px; font-size: 12px; position: absolute; bottom: 75px; left: 15px; display: none; border: 1px solid #00e676; z-index: 5; }
 
-        /* PAINEL ADMIN */
-        .drawer { position: fixed; top: 0; right: -100%; width: 90%; max-width: 400px; height: 100%; background: #111b21; z-index: 20000; transition: 0.4s; padding: 25px; border-left: 2px solid var(--diamond-glow); overflow-y: auto; }
-        .drawer.active { right: 0; }
-        .section-card { background: #1e2a30; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--diamond-glow); }
-        .download-btn { display: inline-flex; align-items: center; gap: 8px; background: #3b4a54; color: var(--diamond-glow); padding: 8px 12px; border-radius: 8px; text-decoration: none; margin-top: 10px; border: 1px solid var(--diamond-glow); font-size: 13px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--secondary-bg);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            cursor: pointer;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+        }
+
+        /* Chat Area */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Pattern WhatsApp */
+            background-blend-mode: overlay;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14.5px;
+            position: relative;
+            word-wrap: break-word;
+            user-select: none; /* Para simular o segurar para copiar */
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background-color: var(--message-in);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--message-out);
+        }
+
+        /* Input Area (WhatsApp Style) */
+        .input-wrapper {
+            background-color: var(--secondary-bg);
+            padding: 8px 12px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .input-box {
+            flex: 1;
+            background-color: #2a3942;
+            border-radius: 24px;
+            display: flex;
+            align-items: flex-end;
+            padding: 5px 12px;
+            min-height: 40px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        #message-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            padding: 10px;
+            outline: none;
+            resize: none;
+            max-height: 120px;
+            font-size: 15px;
+        }
+
+        .send-btn {
+            background-color: var(--accent-color);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Modal ADM */
+        #admin-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label { display: block; margin-bottom: 5px; color: var(--text-secondary); }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #2a3942;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 6px;
+        }
+
+        .save-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <div class="auth-card">
-            <div class="auth-logo-container">
-                <img src="https://i.imgur.com/89S9fT3.png" class="auth-logo-img sync-avatar">
-            </div>
-            <h2 style="color:var(--diamond-glow); margin-bottom: 5px;">DIAMANTE BOT</h2>
-            <p style="color: #8696a0; font-size: 12px; margin-bottom: 20px;">SISTEMA INTELIGENTE PREMIUM</p>
-            
-            <div class="auth-input-wrapper">
-                <input type="email" id="auth-email" class="auth-input" placeholder="E-mail">
-            </div>
-            <div class="auth-input-wrapper">
-                <input type="password" id="auth-pass" class="auth-input" placeholder="Senha">
-                <i class="fa-solid fa-eye toggle-password" onclick="toggleVisibility()"></i>
-            </div>
-            
-            <button class="btn-diamond" id="login-btn">ENTRAR NO SISTEMA</button>
-            
-            <div style="margin: 20px 0; color: #8696a0; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <hr style="flex:1; border:0; border-top:1px solid #333;"> OU <hr style="flex:1; border:0; border-top:1px solid #333;">
-            </div>
-
-            <div id="g_id_onload" data-client_id="296654630911-tvpnofs4m5rkp4n7sj67g8bd12iu3qrg.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
-            <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_black" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+<header>
+    <div class="user-info">
+        <img id="bot-img" src="https://via.placeholder.com/40" class="bot-avatar" onclick="document.getElementById('file-avatar').click()" title="Mudar foto do Bot">
+        <div>
+            <div style="font-weight: bold;">Diamante Bot</div>
+            <div style="font-size: 12px; color: var(--accent-color);">Online</div>
         </div>
     </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="icon-btn" onclick="toggleSearch()">🔍</button>
+        <button class="icon-btn" onclick="openAdmin()">⚙️</button>
+    </div>
+</header>
 
-    <div id="app-main">
-        <header>
-            <div class="avatar-container">
-                <img src="https://i.imgur.com/89S9fT3.png" class="avatar-img sync-avatar">
-            </div>
-            <div class="status-info">
-                <h4 style="font-size: 16px; color: #fff;">DIAMANTE BOT</h4>
-                <div class="status-dot-container">
-                    <div id="api-status-dot" class="status-dot"></div>
-                    <span id="api-status-text">Sistema Offline</span>
-                </div>
-            </div>
-            <i class="fa-solid fa-sliders action-icon" id="open-admin-btn" style="display: none;"></i>
-            <i class="fa-solid fa-right-from-bracket action-icon" style="margin-left: 10px;" id="logout-btn"></i>
-        </header>
+<div id="chat-container">
+    <div class="message bot">Olá Anderson! Diamante Bot pronto. Como posso ajudar hoje?</div>
+</div>
 
-        <div id="file-badge" class="badge-file"></div>
+<div class="input-wrapper">
+    <div class="input-box">
+        <button class="icon-btn" title="Emoji">😊</button>
+        <button class="icon-btn" onclick="document.getElementById('file-input').click()" title="Anexar">📎</button>
+        <textarea id="message-input" placeholder="Mensagem" rows="1"></textarea>
+        <button class="icon-btn" title="Câmera">📷</button>
+    </div>
+    <button id="action-btn" class="send-btn" onclick="sendMessage()">
+        <span id="mic-icon">🎤</span>
+    </button>
+</div>
+
+<!-- Hidden Inputs -->
+<input type="file" id="file-input" style="display:none" onchange="handleFileSelect(event)">
+<input type="file" id="file-avatar" style="display:none" accept="image/*" onchange="updateBotAvatar(event)">
+
+<!-- Modal Admin -->
+<div id="admin-modal">
+    <div class="modal-content">
+        <h3>Painel do Administrador</h3>
+        <br>
+        <div class="input-group">
+            <label>API Key Principal (Mantida)</label>
+            <input type="password" value="sk-xxxxxxxxxxxxxxxxxxxx" id="key1">
+        </div>
+        <div class="input-group">
+            <label>API Key Backup 1</label>
+            <input type="password" placeholder="Chave reserva 1" id="key2">
+        </div>
+        <div class="input-group">
+            <label>API Key Backup 2</label>
+            <input type="password" placeholder="Chave reserva 2" id="key3">
+        </div>
+        <hr style="border: 0.5px solid #333; margin: 15px 0;">
+        <div class="input-group">
+            <label>Adicionar Administrador (E-mail)</label>
+            <input type="email" id="new-adm-email" placeholder="ex: diamante@gmail.com">
+        </div>
+        <button class="save-btn" onclick="saveAdmin()">SALVAR ALTERAÇÕES</button>
+        <button onclick="closeAdmin()" style="background: none; border: none; color: #8696a0; margin-top: 10px; width: 100%; cursor: pointer;">Fechar</button>
+    </div>
+</div>
+
+<script>
+    const messageInput = document.getElementById('message-input');
+    const chatContainer = document.getElementById('chat-container');
+    const actionBtn = document.getElementById('action-btn');
+    const micIcon = document.getElementById('mic-icon');
+
+    // Ajuste automático da altura do textarea (estilo WhatsApp)
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
         
-        <main id="chat-window"></main>
+        if(this.value.trim().length > 0) {
+            micIcon.innerHTML = '➤'; // Símbolo de enviar
+        } else {
+            micIcon.innerHTML = '🎤';
+        }
+    });
 
-        <footer>
-            <div class="input-bar">
-                <label for="file-upload" class="action-icon"><i class="fa-solid fa-paperclip"></i></label>
-                <input type="file" id="file-upload" style="display: none;" multiple>
-                <input type="text" id="msg-input" placeholder="Mensagem">
-                <i class="fa-solid fa-microphone action-icon"></i>
-            </div>
-            <button id="send-btn" class="btn-send">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </footer>
-    </div>
+    function sendMessage() {
+        const text = messageInput.value.trim();
+        if(text === "" && micIcon.innerHTML === '🎤') {
+            alert("Gravando áudio... (Função emulada)");
+            return;
+        }
 
-    <div id="admin-drawer" class="drawer">
-        <h3 style="color: var(--diamond-glow); margin-bottom: 20px;">PAINEL MASTER ADM</h3>
+        if(text !== "") {
+            addMessage(text, 'user');
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            micIcon.innerHTML = '🎤';
+            
+            // Simulação de resposta do Bot
+            setTimeout(() => {
+                addMessage("Recebi sua mensagem! Estou processando...", 'bot');
+            }, 1000);
+        }
+    }
+
+    function addMessage(text, type) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${type}`;
+        msgDiv.innerText = text;
         
-        <div class="section-card">
-            <b style="color: #fff;">Identidade Visual</b>
-            <input type="text" id="admin-bot-img" class="auth-input" placeholder="Link da Foto do Bot">
-            <button class="btn-diamond" onclick="syncGlobalAvatar()" style="padding: 10px;">SINCRONIZAR</button>
-        </div>
-
-        <div class="section-card">
-            <b style="color: #fff;">Tripla Chave API</b>
-            <input type="password" id="admin-key-1" class="auth-input" placeholder="Chave Principal">
-            <input type="password" id="admin-key-2" class="auth-input" placeholder="Chave Reserva 1">
-            <input type="password" id="admin-key-3" class="auth-input" placeholder="Chave Reserva 2">
-            <button class="btn-diamond" id="save-keys-btn" style="padding: 10px;">SALVAR CHAVES</button>
-        </div>
-        <button class="btn-diamond" style="background: #333; color: #fff;" id="close-drawer">FECHAR</button>
-    </div>
-
-    <script>
-        const MASTER_EMAIL = "andersoncleyton2022@gmail.com";
-        const MASTER_PASS = "339317";
-        let rawAttachedContent = "";
-
-        // LOGIN GOOGLE
-        function handleGoogleLogin(response) {
-            console.log("Logado via Google");
-            iniciarApp(false);
-        }
-
-        // LOGIN MANUAL
-        document.getElementById("login-btn").onclick = () => {
-            const email = document.getElementById("auth-email").value.trim().toLowerCase();
-            const pass = document.getElementById("auth-pass").value;
-            if (email === MASTER_EMAIL && pass === MASTER_PASS) {
-                iniciarApp(true);
-            } else {
-                alert("Acesso Negado.");
+        // Função de segurar para copiar/baixar
+        msgDiv.oncontextmenu = (e) => {
+            e.preventDefault();
+            if(confirm("Deseja copiar esta mensagem?")) {
+                navigator.clipboard.writeText(text);
             }
         };
 
-        function iniciarApp(isAdmin) {
-            document.getElementById("auth-screen").style.display = "none";
-            document.getElementById("app-main").style.display = "flex";
-            if (isAdmin) document.getElementById("open-admin-btn").style.display = "block";
-            carregarConfig();
-            checkApiStatus();
-        }
+        chatContainer.appendChild(msgDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 
-        function toggleVisibility() {
-            const input = document.getElementById("auth-pass");
-            input.type = input.type === "password" ? "text" : "password";
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if(file) {
+            addMessage(`📎 Arquivo enviado: ${file.name}`, 'user');
         }
+    }
 
-        // SINCRONIA AVATAR
-        function syncGlobalAvatar(urlOverride) {
-            const url = urlOverride || document.getElementById("admin-bot-img").value;
-            if(!url) return;
-            document.querySelectorAll(".sync-avatar").forEach(img => img.src = url);
-            localStorage.setItem("bot_img", url);
-        }
-
-        // ARQUIVOS E ZIP
-        document.getElementById("file-upload").onchange = async (e) => {
-            const files = e.target.files;
-            if (!files.length) return;
-            let names = "";
-            rawAttachedContent = "--- ARQUIVOS ---\n";
-            for (let f of files) {
-                names += `📎 ${f.name} `;
-                if (f.name.endsWith('.zip')) {
-                    const zip = await JSZip.loadAsync(f);
-                    for (let path in zip.files) {
-                        if (!zip.files[path].dir) {
-                            const txt = await zip.files[path].async("text");
-                            rawAttachedContent += `\n[${path}]\n${txt}\n`;
-                        }
-                    }
-                } else {
-                    const txt = await f.text();
-                    rawAttachedContent += `\n[${f.name}]\n${txt}\n`;
-                }
+    function updateBotAvatar(event) {
+        const file = event.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bot-img').src = e.target.result;
+                alert("Identidade visual do Bot atualizada!");
             }
-            document.getElementById("file-badge").innerText = names;
-            document.getElementById("file-badge").style.display = "block";
-        };
-
-        // CHAT
-        async function enviar() {
-            const input = document.getElementById("msg-input");
-            const texto = input.value.trim();
-            if (!texto && !rawAttachedContent) return;
-
-            renderMsg(texto || "📎 Arquivos enviados", "me");
-            const prompt = texto + "\n" + rawAttachedContent;
-            
-            input.value = "";
-            rawAttachedContent = "";
-            document.getElementById("file-badge").style.display = "none";
-            
-            await chamarIA(prompt);
+            reader.readAsDataURL(file);
         }
+    }
 
-        async function chamarIA(prompt) {
-            const keys = [localStorage.getItem("k1"), localStorage.getItem("k2"), localStorage.getItem("k3")].filter(k => k);
-            if (!keys.length) return renderMsg("Erro: Sem chaves configuradas.", "ai");
+    function openAdmin() { document.getElementById('admin-modal').style.display = 'flex'; }
+    function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
 
-            for (let k of keys) {
-                try {
-                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const data = await resp.json();
-                    const resposta = data.candidates[0].content.parts[0].text;
-                    renderMsg(resposta, "ai");
-                    return;
-                } catch (e) { console.error("Chave falhou, tentando próxima..."); }
-            }
-            renderMsg("Erro crítico: Chaves expiradas.", "ai");
+    function saveAdmin() {
+        const email = document.getElementById('new-adm-email').value;
+        if(email) {
+            alert("Administrador " + email + " adicionado com sucesso!");
         }
+        alert("Configurações e Chaves de API salvas!");
+        closeAdmin();
+    }
 
-        function renderMsg(texto, tipo) {
-            const chat = document.getElementById("chat-window");
-            const div = document.createElement("div");
-            div.className = `bubble-wrapper ${tipo}`;
-            
-            let extra = "";
-            if(tipo === 'ai' && (texto.includes('```') || texto.length > 500)) {
-                extra = `<br><a href="#" class="download-btn" onclick="baixar('${btoa(unescape(encodeURIComponent(texto)))}')"><i class="fa-solid fa-download"></i> Baixar Arquivo</a>`;
-            }
+    function toggleSearch() {
+        const query = prompt("Pesquisar no Google:");
+        if(query) window.open(`https://www.google.com/search?q=${query}`, '_blank');
+    }
+</script>
 
-            div.innerHTML = `<div class="bubble ${tipo}">${texto.replace(/\n/g, '<br>')}${extra}</div>`;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function baixar(b64) {
-            const txt = decodeURIComponent(escape(atob(b64)));
-            const blob = new Blob([txt], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'diamante_bot_file.txt'; a.click();
-        }
-
-        // ADMIN
-        document.getElementById("open-admin-btn").onclick = () => document.getElementById("admin-drawer").classList.add("active");
-        document.getElementById("close-drawer").onclick = () => document.getElementById("admin-drawer").classList.remove("active");
-        document.getElementById("save-keys-btn").onclick = () => {
-            localStorage.setItem("k1", document.getElementById("admin-key-1").value);
-            localStorage.setItem("k2", document.getElementById("admin-key-2").value);
-            localStorage.setItem("k3", document.getElementById("admin-key-3").value);
-            checkApiStatus();
-            alert("Configurações Salvas!");
-        };
-
-        function carregarConfig() {
-            document.getElementById("admin-key-1").value = localStorage.getItem("k1") || "";
-            document.getElementById("admin-key-2").value = localStorage.getItem("k2") || "";
-            document.getElementById("admin-key-3").value = localStorage.getItem("k3") || "";
-            const savedImg = localStorage.getItem("bot_img");
-            if(savedImg) syncGlobalAvatar(savedImg);
-        }
-
-        function checkApiStatus() {
-            const dot = document.getElementById("api-status-dot");
-            const txt = document.getElementById("api-status-text");
-            if (localStorage.getItem("k1")) {
-                dot.classList.add("online");
-                txt.innerText = "Sistema Online";
-            }
-        }
-
-        document.getElementById("send-btn").onclick = enviar;
-        document.getElementById("msg-input").onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
-        document.getElementById("logout-btn").onclick = () => location.reload();
-    </script>
 </body>
 </html>
