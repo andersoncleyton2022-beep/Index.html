@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DIAMANTE BOT | MASTER SYSTEM</title>
+    <!-- Bibliotecas globais via CDN para ícones e manipulação real de pacotes ZIP -->
+    <link rel="stylesheet" href="cloudflare.com" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="cloudflare.com" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        :root {
+            --wa-bg: #0b141a; 
+            --wa-header: #202c33; 
+            --wa-green: #00a884;
+            --wa-msg-me: #005c4b; 
+            --wa-msg-ai: #202c33; 
+            --wa-text: #e9edef;
+            --wa-input: #2a3942; 
+            --wa-accent: #00e676;
+            --main-bg-img: none;
+            --chat-bg-img: none;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--wa-bg); color: var(--wa-text); height: 100vh; overflow: hidden; }
+        
+        /* AUTENTICAÇÃO */
+        #auth-screen { position: fixed; inset: 0; background: #050a0d; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { background: rgba(34, 46, 53, 0.95); backdrop-filter: blur(5px); padding: 30px; border-radius: 15px; width: 100%; max-width: 380px; text-align: center; border-top: 5px solid var(--wa-green); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .auth-logo-container { width: 90px; height: 90px; border-radius: 50%; overflow: hidden; margin: 0 auto 15px auto; border: 3px solid var(--wa-green); background: #3b4a54; }
+        .auth-logo-img { width: 100%; height: 100%; object-fit: cover; }
+        .auth-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: var(--wa-input); color: white; outline: none; font-size: 16px; }
+        .pass-container { position: relative; width: 100%; }
+        .eye-btn { position: absolute; right: 12px; top: 22px; color: #8696a0; cursor: pointer; z-index: 5; }
+        .btn-green { background: var(--wa-green); color: white; border: none; padding: 12px; border-radius: 30px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn-green:hover { opacity: 0.9; }
+        /* CORE INTERFACE */
+        #app-main { display: none; height: 100vh; flex-direction: column; background-color: rgba(11,20,26,0.9); background-image: var(--main-bg-img); background-size: cover; background-position: center; background-blend-mode: darken; }
+        header { background: var(--wa-header); padding: 10px 15px; display: flex; align-items: center; gap: 12px; height: 60px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #3b4a54; display: flex; align-items: center; justify-content: center; border: 2px solid var(--wa-green); }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; background-image: var(--chat-bg-img); background-size: cover; background-position: center; }
+        
+        /* MONITOR DE STATUS DA API */
+        .status-dot-container { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8696a0; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 12px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #b71c1c; transition: 0.3s; }
+        .status-dot.online { background: var(--wa-accent); box-shadow: 0 0 6px var(--wa-accent); }
+        
+        /* ECOSSISTEMA DE BALÕES */
+        .bubble-wrapper { display: flex; width: 100%; gap: 8px; margin-bottom: 2px; }
+        .bubble-wrapper.me { justify-content: flex-end; }
+        .bubble-wrapper.ai { justify-content: flex-start; }
+        .chat-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; align-self: flex-start; border: 1px solid var(--wa-green); }
+        .bubble { max-width: 75%; padding: 10px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .bubble.me { background: var(--wa-msg-me); border-top-right-radius: 0; }
+        .bubble.ai { background: var(--wa-msg-ai); border-top-left-radius: 0; }
+        .msg-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; }
+        pre { background: #000; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; overflow-x: auto; margin-top: 8px; font-size: 13px; white-space: pre-wrap; text-align: left; }
+        
+        /* PROGRESSO */
+        #upload-progress-container { display: none; background: var(--wa-header); padding: 10px 15px; border-bottom: 2px solid #004d40; }
+        .progress-bar-bg { background: var(--wa-input); width: 100%; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .progress-bar-fill { background: var(--wa-accent); width: 0%; height: 100%; transition: width 0.3s ease; }
+        
+        /* PAINÉIS LATERAIS (DRAWERS) */
+        .drawer { position: fixed; top: 0; right: -100%; width: 85%; max-width: 400px; height: 100%; background: #111b21; z-index: 20000; transition: 0.4s; padding: 25px; border-left: 2px solid var(--wa-green); overflow-y: auto; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        .drawer.active { right: 0; }
+        .section-card { background: #1e2a30; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid var(--wa-green); }
+        .section-card.admin-card { border-left-color: #ff3d00; }
+        
+        /* RODAPÉ DE ENTRADA */
+        footer { background: var(--wa-header); padding: 10px; display: flex; align-items: center; gap: 10px; }
+        .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; }
+        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
+        .action-icon { color: #8696a0; font-size: 20px; cursor: pointer; transition: 0.2s; }
+        .action-icon:hover { color: white; }
+        .badge-file { display: inline-block; background: #004d40; color: #00e676; padding: 3px 8px; border-radius: 5px; font-size: 12px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- TELA DE AUTENTICAÇÃO -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo-container">
+                <img src="" alt="DiamanteBot" class="auth-logo-img global-bot-img">
+            </div>
+            <h2 id="auth-title" style="color:var(--wa-green); margin-bottom: 15px;">DIAMANTE LOGIN</h2>
+            <input type="email" id="auth-email" class="auth-input" placeholder="E-mail">
+            <div class="pass-container">
+                <input type="password" id="auth-pass" class="auth-input" placeholder="Senha">
+                <i class="fa-solid fa-eye eye-btn" id="eye-toggle"></i>
+            </div>
+            <button class="btn-green" id="login-btn">ENTRAR NO SISTEMA</button>
+            <p id="switch-auth-mode" style="font-size:12px; color:var(--wa-accent); margin-top:20px; cursor:pointer">Não tem conta? Registre-se aqui</p>
+        </div>
+    </div>
+    <!-- PAINEL DO USUÁRIO -->
+    <div id="user-drawer" class="drawer">
+        <h3 style="color: var(--wa-green); margin-bottom: 20px;"><i class="fa-solid fa-sliders"></i> Opções do Usuário</h3>
+        <div class="section-card">
+            <label style="font-size: 13px;">1. Escolha o Modelo de IA:</label>
+            <select id="user-model" class="auth-input" style="background-color: var(--wa-input); color:white;">
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recomendado para ZIP)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Análise Complexa)</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Mais Rápido)</option>
+            </select>
+        </div>
+        <div class="section-card">
+            <b style="color: white; font-size: 13px;">Gerenciamento de Conversa:</b>
+            <button class="btn-green" style="background: #0288d1; margin-top: 10px; height: 35px; font-size: 12px; padding: 0 10px;" id="backup-chat-btn"><i class="fa-solid fa-download"></i> BAIXAR BACKUP (.JSON)</button>
+            <button class="btn-green" style="background: #b71c1c; margin-top: 10px; height: 35px; font-size: 12px; padding: 0 10px;" id="clear-chat-btn"><i class="fa-solid fa-trash"></i> LIMPAR HISTÓRICO DO CHAT</button>
+        </div>
+        <button class="btn-green" style="background:#3b4a54" id="close-user-btn">FECHAR</button>
+    </div>
+
+    <!-- PAINEL MASTER ADMIN -->
+    <div id="admin-drawer" class="drawer">
+        <h3 style="color: #ff3d00; margin-bottom: 20px;"><i class="fa-solid fa-user-shield"></i> Painel Master Admin</h3>
+        <div class="section-card admin-card">
+            <b style="color: var(--wa-accent);">Gerenciamento de Chaves API (Até 3 com Rotação):</b>
+            <input type="password" id="admin-key-1" class="auth-input" placeholder="Chave API Gemini 1 (Principal)">
+            <input type="password" id="admin-key-2" class="auth-input" placeholder="Chave API Gemini 2 (Reserva)">
+            <input type="password" id="admin-key-3" class="auth-input" placeholder="Chave API Gemini 3 (Reserva)">
+        </div>
+        <div class="section-card admin-card">
+            <b style="color: var(--wa-accent);">Identidade Visual e Customização:</b>
+            <label style="font-size:11px; margin-top:5px; display:block;">URL da Imagem do DiamanteBot:</label>
+            <input type="text" id="url-bot-avatar" class="auth-input" placeholder="Link direto da imagem do Bot">
+            <label style="font-size:11px; display:block;">Papel de Parede - Geral:</label>
+            <input type="text" id="url-bg-main" class="auth-input" placeholder="Link da imagem de fundo externa">
+            <label style="font-size:11px; display:block;">Papel de Parede - Chat:</label>
+            <input type="text" id="url-bg-chat" class="auth-input" placeholder="Link da imagem interna do chat">
+            
+            <label style="font-size:11px; display:block; margin-top:8px;">Cor dos Botões (Hexadecimal):</label>
+            <input type="color" id="color-btn-admin" class="auth-input" style="height:40px; padding:2px; cursor:pointer;">
+            <label style="font-size:11px; display:block;">Formato dos Botões:</label>
+            <select id="shape-btn-admin" class="auth-input" style="background-color: var(--wa-input); color:white;">
+                <option value="30px">Totalmente Arredondado (Padrão)</option>
+                <option value="12px">Quadrado Arredondado (Moderno)</option>
+                <option value="4px">Quadrado Clássico</option>
+            </select>
+            
+            <button class="btn-green" style="background:#ff3d00; height:35px; font-size:12px; padding: 0 10px;" id="save-admin-visuals">SALVAR PROPRIEDADES</button>
+        </div>
+        <div class="section-card admin-card">
+            <b style="color: var(--wa-accent);">Cadastrar Novo Admin Auxiliar:</b>
+            <input type="email" id="new-admin-email" class="auth-input" placeholder="E-mail do novo ADM">
+            <input type="password" id="new-admin-pass" class="auth-input" placeholder="Senha do novo ADM">
+            <button class="btn-green" style="height:35px; font-size:12px; padding: 0 10px;" id="add-admin-btn">OUTORGAR PERMISSÃO ADM</button>
+            <div id="sub-admins-list" style="font-size:12px; margin-top:10px; color:#8696a0; max-height:100px; overflow-y:auto;"></div>
+        </div>
+        <button class="btn-green" style="background:#3b4a54" id="close-admin-btn">FECHAR</button>
+    </div>
+
+    <!-- INTERFACE PRINCIPAL DO SITE -->
+    <div id="app-main">
+        <header>
+            <div class="avatar-container">
+                <img src="" alt="Avatar" class="avatar-img global-bot-img">
+            </div>
+            <div style="flex: 1;">
+                <h4 style="font-size: 16px; font-weight: 600;">DIAMANTE BOT</h4>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                    <div class="status-dot-container">
+                        <div id="api-status-dot" class="status-dot"></div>
+                        <span id="api-status-text">API Offline</span>
+                    </div>
+                </div>
+            </div>
+            <i class="fa-solid fa-sliders action-icon" id="open-user-menu" title="Configurações"></i>
+            <i class="fa-solid fa-user-shield action-icon" id="open-admin-menu" style="display: none; color: #ff3d00;" title="Painel Admin"></i>
+            <i class="fa-solid fa-right-from-bracket action-icon" id="logout-btn" title="Sair"></i>
+        </header>
+
+        <!-- Barra de Progresso Real de Descompressão do ZIP -->
+        <div id="upload-progress-container">
+            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                <span id="upload-status-text" style="color: var(--wa-accent);">Extraindo e filtrando arquivos de código...</span>
+                <span id="upload-percentage">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="upload-progress-bar" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <main id="chat-window"></main>
+
+        <footer>
+            <div class="input-bar">
+                <label for="file-upload" class="action-icon" style="margin-right: 10px;">
+                    <i class="fa-solid fa-paperclip" title="Anexar Arquivo Individual ou ZIP do Projeto"></i>
+                </label>
+                <input type="file" id="file-upload" style="display: none;" accept=".zip,.rar,.7z,.txt,.js,.html,.css,.json,.py">
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <input type="text" id="msg-input" placeholder="Envie mensagens ou anexe o ZIP do seu projeto...">
+                    <span id="file-badge" class="badge-file" style="display: none;"></span>
+                </div>
+            </div>
+            <button id="send-btn" style="background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;">
+                <i class="fa-solid fa-paper-plane" style="font-size: 16px;"></i>
+            </button>
+        </footer>
+    </div>
+    <!-- MOTOR LOGICO E DE RENDERIZAÇÃO LOCAL -->
+    <script>
+        // Definições Estritas Master Admin
+        const MASTER_ADMIN_EMAIL = "andersoncleyton2022@gmail.com";
+        const MASTER_ADMIN_PASS = "339317";
+        const DEFAULT_BOT_AVATAR = "imgur.com"; // Avatar Padrão Diamante
+
+        let currentUser = null;
+        let authMode = "login";
+        let rawAttachedFileContent = "";
+        let attachedFileName = "";
+
+        // Elementos DOM Mapeados
+        const authScreen = document.getElementById("auth-screen");
+        const appMain = document.getElementById("app-main");
+        const authTitle = document.getElementById("auth-title");
+        const authEmail = document.getElementById("auth-email");
+        const authPass = document.getElementById("auth-pass");
+        const loginBtn = document.getElementById("login-btn");
+        const switchAuthMode = document.getElementById("switch-auth-mode");
+        const eyeToggle = document.getElementById("eye-toggle");
+        const chatWindow = document.getElementById("chat-window");
+        const msgInput = document.getElementById("msg-input");
+        const sendBtn = document.getElementById("send-btn");
+        const fileUpload = document.getElementById("file-upload");
+        const fileBadge = document.getElementById("file-badge");
+        const uploadProgressContainer = document.getElementById("upload-progress-container");
+        const uploadProgressBar = document.getElementById("upload-progress-bar");
+        const uploadPercentage = document.getElementById("upload-percentage");
+        const userDrawer = document.getElementById("user-drawer");
+        const adminDrawer = document.getElementById("admin-drawer");
+        const openUserMenu = document.getElementById("open-user-menu");
+        const openAdminMenu = document.getElementById("open-admin-menu");
+
+        // Inicialização do Banco de Dados Local do Aplicativo (LocalStorage setup)
+        if (!localStorage.getItem("diamante_users")) {
+            localStorage.setItem("diamante_users", JSON.stringify({}));
+        }
+        if (!localStorage.getItem("diamante_admins")) {
+            const initialAdmins = {};
+            initialAdmins[MASTER_ADMIN_EMAIL] = MASTER_ADMIN_PASS;
+            localStorage.setItem("diamante_admins", JSON.stringify(initialAdmins));
+        }
+
+        // Mostrar/Ocultar Senha
+        eyeToggle.addEventListener("click", () => {
+            const isPass = authPass.type === "password";
+            authPass.type = isPass ? "text" : "password";
+            eyeToggle.className = isPass ? "fa-solid fa-eye-slash eye-btn" : "fa-solid fa-eye eye-btn";
+        });
+
+        // Alternar visual de Login / Registro
+        switchAuthMode.addEventListener("click", () => {
+            authMode = (authMode === "login") ? "register" : "login";
+            authTitle.innerText = authMode === "login" ? "DIAMANTE LOGIN" : "DIAMANTE REGISTRO";
+            loginBtn.innerText = authMode === "login" ? "ENTRAR NO SISTEMA" : "CRIAR NOVA CONTA";
+            switchAuthMode.innerText = authMode === "login" ? "Não tem conta? Registre-se aqui" : "Já possui uma conta? Entre aqui";
+        });
+
+        // Sistema de login e Autenticação Autônoma
+        loginBtn.addEventListener("click", () => {
+            const email = authEmail.value.trim().toLowerCase();
+            const pass = authPass.value;
+
+            if (!email || !pass) return alert("Por favor, preencha todos os campos obrigatórios.");
+
+            const registeredUsers = JSON.parse(localStorage.getItem("diamante_users"));
+            const registeredAdmins = JSON.parse(localStorage.getItem("diamante_admins"));
+
+            if (authMode === "login") {
+                if (registeredAdmins[email] && registeredAdmins[email] === pass) {
+                    efetuarLoginSessao(email, true);
+                } else if (registeredUsers[email] && registeredUsers[email] === pass) {
+                    efetuarLoginSessao(email, false);
+                } else {
+                    alert("Acesso Negado! Usuário ou senha incorretos.");
+                }
+            } else {
+                if (registeredUsers[email] || registeredAdmins[email]) {
+                    return alert("Este e-mail já encontra-se cadastrado no sistema.");
+                }
+                registeredUsers[email] = pass;
+                localStorage.setItem("diamante_users", JSON.stringify(registeredUsers));
+                alert("Conta registrada com sucesso! Realize o login.");
+                authMode = "login";
+                authTitle.innerText = "DIAMANTE LOGIN";
+                loginBtn.innerText = "ENTRAR NO SISTEMA";
+                switchAuthMode.innerText = "Não tem conta? Registre-se aqui";
+            }
+        });
+        function efetuarLoginSessao(email, isAdmin) {
+            currentUser = { email: email, isAdmin: isAdmin };
+            authScreen.style.display = "none";
+            appMain.style.display = "flex";
+
+            if (isAdmin) {
+                openAdminMenu.style.display = "block";
+                carregarPainelAdmin();
+            } else {
+                openAdminMenu.style.display = "none";
+            }
+
+            carregarConfiguracoesVisuais();
+            atualizarMonitorStatusAPI();
+            carregarHistoricoChat();
+        }
+
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            currentUser = null;
+            authScreen.style.display = "flex";
+            appMain.style.display = "none";
+            chatWindow.innerHTML = "";
+            authEmail.value = "";
+            authPass.value = "";
+        });
+
+        // Controles dos Menus Laterais
+        openUserMenu.addEventListener("click", () => userDrawer.classList.add("active"));
+        document.getElementById("close-user-btn").addEventListener("click", () => userDrawer.classList.remove("active"));
+        openAdminMenu.addEventListener("click", () => adminDrawer.classList.add("active"));
+        document.getElementById("close-admin-btn").addEventListener("click", () => adminDrawer.classList.remove("active"));
+
+        function aplicarAvataresGlobais(url) {
+            const finalUrl = url || DEFAULT_BOT_AVATAR;
+            document.querySelectorAll(".global-bot-img").forEach(img => {
+                img.src = finalUrl;
+            });
+            localStorage.setItem("diamante_asset_avatar", finalUrl);
+        }
+
+        function carregarConfiguracoesVisuais() {
+            const avatar = localStorage.getItem("diamante_asset_avatar") || DEFAULT_BOT_AVATAR;
+            aplicarAvataresGlobais(avatar);
+
+            const bgMain = localStorage.getItem("diamante_asset_bgmain");
+            if (bgMain) document.documentElement.style.setProperty('--main-bg-img', `url('${bgMain}')`);
+
+            const bgChat = localStorage.getItem("diamante_asset_bgchat");
+            if (bgChat) document.documentElement.style.setProperty('--chat-bg-img', `url('${bgChat}')`);
+
+            // Customizações dinâmicas dos botões
+            const btnColor = localStorage.getItem("diamante_btn_color") || "#00a884";
+            const btnShape = localStorage.getItem("diamante_btn_shape") || "30px";
+            document.documentElement.style.setProperty('--wa-green', btnColor);
+            
+            document.querySelectorAll(".btn-green").forEach(btn => btn.style.borderRadius = btnShape);
+            const sendBtnEl = document.getElementById("send-btn");
+            if (sendBtnEl) sendBtnEl.style.borderRadius = btnShape === "30px" ? "50%" : btnShape;
+        }
+
+        function carregarPainelAdmin() {
+            document.getElementById("admin-key-1").value = localStorage.getItem("diamante_key_1") || "";
+            document.getElementById("admin-key-2").value = localStorage.getItem("diamante_key_2") || "";
+            document.getElementById("admin-key-3").value = localStorage.getItem("diamante_key_3") || "";
+            document.getElementById("url-bot-avatar").value = localStorage.getItem("diamante_asset_avatar") || "";
+            document.getElementById("url-bg-main").value = localStorage.getItem("diamante_asset_bgmain") || "";
+            document.getElementById("url-bg-chat").value = localStorage.getItem("diamante_asset_bgchat") || "";
+            
+            document.getElementById("color-btn-admin").value = localStorage.getItem("diamante_btn_color") || "#00a884";
+            document.getElementById("shape-btn-admin").value = localStorage.getItem("diamante_btn_shape") || "30px";
+
+            const admins = JSON.parse(localStorage.getItem("diamante_admins"));
+            const listContainer = document.getElementById("sub-admins-list");
+            listContainer.innerHTML = "<b>Administradores Ativos no Sistema:</b><br>";
+            Object.keys(admins).forEach(admEmail => {
+                listContainer.innerHTML += `• ${admEmail} ${admEmail === MASTER_ADMIN_EMAIL ? '(Mestre)' : '(Auxiliar)'}<br>`;
+            });
+        }
+
+        document.getElementById("save-admin-visuals").addEventListener("click", () => {
+            localStorage.setItem("diamante_key_1", document.getElementById("admin-key-1").value.trim());
+            localStorage.setItem("diamante_key_2", document.getElementById("admin-key-2").value.trim());
+            localStorage.setItem("diamante_key_3", document.getElementById("admin-key-3").value.trim());
+            localStorage.setItem("diamante_asset_bgmain", document.getElementById("url-bg-main").value.trim());
+            localStorage.setItem("diamante_asset_bgchat", document.getElementById("url-bg-chat").value.trim());
+            
+            localStorage.setItem("diamante_btn_color", document.getElementById("color-btn-admin").value);
+            localStorage.setItem("diamante_btn_shape", document.getElementById("shape-btn-admin").value);
+            
+            aplicarAvataresGlobais(document.getElementById("url-bot-avatar").value.trim());
+            carregarConfiguracoesVisuais();
+            atualizarMonitorStatusAPI();
+            alert("Configurações visuais aplicadas com sucesso!");
+            adminDrawer.classList.remove("active");
+        });
+
+        document.getElementById("add-admin-btn").addEventListener("click", () => {
+            const email = document.getElementById("new-admin-email").value.trim().toLowerCase();
+            const pass = document.getElementById("new-admin-pass").value;
+
+            if (!email || !pass) return alert("Forneça e-mail e senha para o novo ADM.");
+
+            const admins = JSON.parse(localStorage.getItem("diamante_admins"));
+            admins[email] = pass;
+            localStorage.setItem("diamante_admins", JSON.stringify(admins));
+
+            alert(`Permissão administrativa concedida com sucesso para: ${email}`);
+            document.getElementById("new-admin-email").value = "";
+            document.getElementById("new-admin-pass").value = "";
+            carregarPainelAdmin();
+        });
+
+        // Função do Monitor Realtime de Status das Chaves
+        function atualizarMonitorStatusAPI() {
+            const dot = document.getElementById("api-status-dot");
+            const txt = document.getElementById("api-status-text");
+            const k1 = localStorage.getItem("diamante_key_1");
+            const k2 = localStorage.getItem("diamante_key_2");
+            const k3 = localStorage.getItem("diamante_key_3");
+
+            if (k1 || k2 || k3) {
+                dot.classList.add("online");
+                txt.innerText = "API Pronta";
+            } else {
+                dot.classList.remove("online");
+                txt.innerText = "API Sem Chave";
+            }
+        }
+
+        // Backup de conversas do usuário em JSON
+        document.getElementById("backup-chat-btn").addEventListener("click", () => {
+            const historico = localStorage.getItem(`diamante_hist_${currentUser.email}`);
+            if (!historico || historico === "[]") return alert("Histórico de mensagens vazio para exportação.");
+
+            const blob = new Blob([historico], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup_diamantebot_${currentUser.email}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById("clear-chat-btn").addEventListener("click", () => {
+            if (confirm("Deseja apagar permanentemente o seu histórico local de conversações?")) {
+                localStorage.removeItem(`diamante_hist_${currentUser.email}`);
+                chatWindow.innerHTML = "";
+                userDrawer.classList.remove("active");
+            }
+        });
+
+        // LEITURA REAL DE ARQUIVOS COM FILTRO INTELIGENTE ANTI-SURGIMENTO DE LIXO BINÁRIO (NATIVO)
+        fileUpload.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            attachedFileName = file.name;
+            fileBadge.innerText = `📎 Carregando: ${file.name}`;
+            fileBadge.style.display = "inline-block";
+
+            if (file.name.endsWith('.zip')) {
+                uploadProgressContainer.style.display = "block";
+                uploadProgressBar.style.width = "10%";
+                uploadPercentage.innerText = "10%";
+
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    uploadProgressBar.style.width = "30%";
+                    uploadPercentage.innerText = "30%";
+
+                    JSZip.loadAsync(evt.target.result).then(function(zip) {
+                        uploadProgressBar.style.width = "60%";
+                        uploadPercentage.innerText = "60%";
+                        
+                        let totalFilesText = `--- CONTEÚDO ESTRUTURADO EXTRAÍDO DO ARQUIVO ZIP: ${file.name} ---\n`;
+                        const fileReadPromises = [];
+
+                        // Extensões permitidas pelo filtro estrutural inteligente
+                        const extensoesSuportadas = ['.html', '.css', '.js', '.py', '.txt', '.json', '.php', '.ts', '.jsx', '.tsx', '.c', '.cpp', '.cs', '.java'];
+
+                        zip.forEach(function (relativePath, zipEntry) {
+                            if (!zipEntry.dir && !zipEntry.name.includes('__MACOSX') && !zipEntry.name.includes('.DS_Store')) {
+                                const nomeMinusculo = zipEntry.name.toLowerCase();
+                                const ehValido = extensoesSuportadas.some(ext => nomeMinusculo.endsWith(ext));
+
+                                // Só lê e converte se for um arquivo de texto ou de programação legível
+                                if (ehValido) {
+                                    const promise = zipEntry.async("text").then(function (content) {
+                                        totalFilesText += `\n[Arquivo Encontrado: ${relativePath}]\n\`\`\`\n${content}\n\`\`\`\n`;
+                                    });
+                                    fileReadPromises.push(promise);
+                                }
+                            }
+                        });
+                        Promise.all(fileReadPromises).then(function() {
+                            rawAttachedFileContent = totalFilesText;
+                            uploadProgressBar.style.width = "100%";
+                            uploadPercentage.innerText = "100%";
+                            fileBadge.innerText = `📎 ZIP Filtrado: ${file.name} (Códigos Prontos)`;
+                            setTimeout(() => { uploadProgressContainer.style.display = "none"; }, 500);
+                        });
+                    }).catch(function(err) {
+                        alert("Falha na descompressão do pacote: " + err.message);
+                        resetAnexo();
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    rawAttachedFileContent = `\n--- ARQUIVO COMPLEMENTAR INDIVIDUAL: ${file.name} ---\n\`\`\`\n${evt.target.result}\n\`\`\`\n`;
+                    fileBadge.innerText = `📎 Pronto: ${file.name}`;
+                };
+                reader.readAsText(file);
+            }
+        });
+    <!-- MOTOR LOGICO E DE RENDERIZAÇÃO LOCAL -->
+    <script>
+        // Definições Estritas Master Admin
+        const MASTER_ADMIN_EMAIL = "andersoncleyton2022@gmail.com";
+        const MASTER_ADMIN_PASS = "339317";
+        const DEFAULT_BOT_AVATAR = "imgur.com"; // Avatar Padrão Diamante
+
+        let currentUser = null;
+        let authMode = "login";
+        let rawAttachedFileContent = "";
+        let attachedFileName = "";
+
+        // Elementos DOM Mapeados
+        const authScreen = document.getElementById("auth-screen");
+        const appMain = document.getElementById("app-main");
+        const authTitle = document.getElementById("auth-title");
+        const authEmail = document.getElementById("auth-email");
+        const authPass = document.getElementById("auth-pass");
+        const loginBtn = document.getElementById("login-btn");
+        const switchAuthMode = document.getElementById("switch-auth-mode");
+        const eyeToggle = document.getElementById("eye-toggle");
+        const chatWindow = document.getElementById("chat-window");
+        const msgInput = document.getElementById("msg-input");
+        const sendBtn = document.getElementById("send-btn");
+        const fileUpload = document.getElementById("file-upload");
+        const fileBadge = document.getElementById("file-badge");
+        const uploadProgressContainer = document.getElementById("upload-progress-container");
+        const uploadProgressBar = document.getElementById("upload-progress-bar");
+        const uploadPercentage = document.getElementById("upload-percentage");
+        const userDrawer = document.getElementById("user-drawer");
+        const adminDrawer = document.getElementById("admin-drawer");
+        const openUserMenu = document.getElementById("open-user-menu");
+        const openAdminMenu = document.getElementById("open-admin-menu");
+
+        // Inicialização do Banco de Dados Local do Aplicativo (LocalStorage setup)
+        if (!localStorage.getItem("diamante_users")) {
+            localStorage.setItem("diamante_users", JSON.stringify({}));
+        }
+        if (!localStorage.getItem("diamante_admins")) {
+            const initialAdmins = {};
+            initialAdmins[MASTER_ADMIN_EMAIL] = MASTER_ADMIN_PASS;
+            localStorage.setItem("diamante_admins", JSON.stringify(initialAdmins));
+        }
+
+        // Mostrar/Ocultar Senha
+        eyeToggle.addEventListener("click", () => {
+            const isPass = authPass.type === "password";
+            authPass.type = isPass ? "text" : "password";
+            eyeToggle.className = isPass ? "fa-solid fa-eye-slash eye-btn" : "fa-solid fa-eye eye-btn";
+        });
+
+        // Alternar visual de Login / Registro
+        switchAuthMode.addEventListener("click", () => {
+            authMode = (authMode === "login") ? "register" : "login";
+            authTitle.innerText = authMode === "login" ? "DIAMANTE LOGIN" : "DIAMANTE REGISTRO";
+            loginBtn.innerText = authMode === "login" ? "ENTRAR NO SISTEMA" : "CRIAR NOVA CONTA";
+            switchAuthMode.innerText = authMode === "login" ? "Não tem conta? Registre-se aqui" : "Já possui uma conta? Entre aqui";
+        });
+
+        // Sistema de login e Autenticação Autônoma
+        loginBtn.addEventListener("click", () => {
+            const email = authEmail.value.trim().toLowerCase();
+            const pass = authPass.value;
+
+            if (!email || !pass) return alert("Por favor, preencha todos os campos obrigatórios.");
+
+            const registeredUsers = JSON.parse(localStorage.getItem("diamante_users"));
+            const registeredAdmins = JSON.parse(localStorage.getItem("diamante_admins"));
+
+            if (authMode === "login") {
+                if (registeredAdmins[email] && registeredAdmins[email] === pass) {
+                    efetuarLoginSessao(email, true);
+                } else if (registeredUsers[email] && registeredUsers[email] === pass) {
+                    efetuarLoginSessao(email, false);
+                } else {
+                    alert("Acesso Negado! Usuário ou senha incorretos.");
+                }
+            } else {
+                if (registeredUsers[email] || registeredAdmins[email]) {
+                    return alert("Este e-mail já encontra-se cadastrado no sistema.");
+                }
+                registeredUsers[email] = pass;
+                localStorage.setItem("diamante_users", JSON.stringify(registeredUsers));
+                alert("Conta registrada com sucesso! Realize o login.");
+                authMode = "login";
+                authTitle.innerText = "DIAMANTE LOGIN";
+                loginBtn.innerText = "ENTRAR NO SISTEMA";
+                switchAuthMode.innerText = "Não tem conta? Registre-se aqui";
+            }
+        });
+
+        function efetuarLoginSessao(email, isAdmin) {
+            currentUser = { email: email, isAdmin: isAdmin };
+            authScreen.style.display = "none";
+            appMain.style.display = "flex";
+
+            if (isAdmin) {
+                openAdminMenu.style.display = "block";
+                carregarPainelAdmin();
+            } else {
+                openAdminMenu.style.display = "none";
+            }
+
+            carregarConfiguracoesVisuais();
+            atualizarMonitorStatusAPI();
+            carregarHistoricoChat();
+        }
+
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            currentUser = null;
+            authScreen.style.display = "flex";
+            appMain.style.display = "none";
+            chatWindow.innerHTML = "";
+            authEmail.value = "";
+            authPass.value = "";
+        });
+
+        // Controles dos Menus Laterais
+        openUserMenu.addEventListener("click", () => userDrawer.classList.add("active"));
+        document.getElementById("close-user-btn").addEventListener("click", () => userDrawer.classList.remove("active"));
+        openAdminMenu.addEventListener("click", () => adminDrawer.classList.add("active"));
+        document.getElementById("close-admin-btn").addEventListener("click", () => adminDrawer.classList.remove("active"));
+        function aplicarAvataresGlobais(url) {
+            const finalUrl = url || DEFAULT_BOT_AVATAR;
+            document.querySelectorAll(".global-bot-img").forEach(img => {
+                img.src = finalUrl;
+            });
+            localStorage.setItem("diamante_asset_avatar", finalUrl);
+        }
+
+        function carregarConfiguracoesVisuais() {
+            const avatar = localStorage.getItem("diamante_asset_avatar") || DEFAULT_BOT_AVATAR;
+            aplicarAvataresGlobais(avatar);
+
+            const bgMain = localStorage.getItem("diamante_asset_bgmain");
+            if (bgMain) document.documentElement.style.setProperty('--main-bg-img', `url('${bgMain}')`);
+
+            const bgChat = localStorage.getItem("diamante_asset_bgchat");
+            if (bgChat) document.documentElement.style.setProperty('--chat-bg-img', `url('${bgChat}')`);
+
+            // Customizações dinâmicas dos botões
+            const btnColor = localStorage.getItem("diamante_btn_color") || "#00a884";
+            const btnShape = localStorage.getItem("diamante_btn_shape") || "30px";
+            document.documentElement.style.setProperty('--wa-green', btnColor);
+            
+            document.querySelectorAll(".btn-green").forEach(btn => btn.style.borderRadius = btnShape);
+            const sendBtnEl = document.getElementById("send-btn");
+            if (sendBtnEl) sendBtnEl.style.borderRadius = btnShape === "30px" ? "50%" : btnShape;
+        }
+
+        function carregarPainelAdmin() {
+            document.getElementById("admin-key-1").value = localStorage.getItem("diamante_key_1") || "";
+            document.getElementById("admin-key-2").value = localStorage.getItem("diamante_key_2") || "";
+            document.getElementById("admin-key-3").value = localStorage.getItem("diamante_key_3") || "";
+            document.getElementById("url-bot-avatar").value = localStorage.getItem("diamante_asset_avatar") || "";
+            document.getElementById("url-bg-main").value = localStorage.getItem("diamante_asset_bgmain") || "";
+            document.getElementById("url-bg-chat").value = localStorage.getItem("diamante_asset_bgchat") || "";
+            
+            document.getElementById("color-btn-admin").value = localStorage.getItem("diamante_btn_color") || "#00a884";
+            document.getElementById("shape-btn-admin").value = localStorage.getItem("diamante_btn_shape") || "30px";
+
+            const admins = JSON.parse(localStorage.getItem("diamante_admins"));
+            const listContainer = document.getElementById("sub-admins-list");
+            listContainer.innerHTML = "<b>Administradores Ativos no Sistema:</b><br>";
+            Object.keys(admins).forEach(admEmail => {
+                listContainer.innerHTML += `• ${admEmail} ${admEmail === MASTER_ADMIN_EMAIL ? '(Mestre)' : '(Auxiliar)'}<br>`;
+            });
+        }
+
+        document.getElementById("save-admin-visuals").addEventListener("click", () => {
+            localStorage.setItem("diamante_key_1", document.getElementById("admin-key-1").value.trim());
+            localStorage.setItem("diamante_key_2", document.getElementById("admin-key-2").value.trim());
+            localStorage.setItem("diamante_key_3", document.getElementById("admin-key-3").value.trim());
+            localStorage.setItem("diamante_asset_bgmain", document.getElementById("url-bg-main").value.trim());
+            localStorage.setItem("diamante_asset_bgchat", document.getElementById("url-bg-chat").value.trim());
+            
+            localStorage.setItem("diamante_btn_color", document.getElementById("color-btn-admin").value);
+            localStorage.setItem("diamante_btn_shape", document.getElementById("shape-btn-admin").value);
+            
+            aplicarAvataresGlobais(document.getElementById("url-bot-avatar").value.trim());
+            carregarConfiguracoesVisuais();
+            atualizarMonitorStatusAPI();
+            alert("Configurações visuais aplicadas com sucesso!");
+            adminDrawer.classList.remove("active");
+        });
+
+        document.getElementById("add-admin-btn").addEventListener("click", () => {
+            const email = document.getElementById("new-admin-email").value.trim().toLowerCase();
+            const pass = document.getElementById("new-admin-pass").value;
+
+            if (!email || !pass) return alert("Forneça e-mail e senha para o novo ADM.");
+            const admins = JSON.parse(localStorage.getItem("diamante_admins"));
+            admins[email] = pass;
+            localStorage.setItem("diamante_admins", JSON.stringify(admins));
+
+            alert(`Permissão administrativa concedida com sucesso para: ${email}`);
+            document.getElementById("new-admin-email").value = "";
+            document.getElementById("new-admin-pass").value = "";
+            carregarPainelAdmin();
+        });
+
+        // Função do Monitor Realtime de Status das Chaves
+        function atualizarMonitorStatusAPI() {
+            const dot = document.getElementById("api-status-dot");
+            const txt = document.getElementById("api-status-text");
+            const k1 = localStorage.getItem("diamante_key_1");
+            const k2 = localStorage.getItem("diamante_key_2");
+            const k3 = localStorage.getItem("diamante_key_3");
+
+            if (k1 || k2 || k3) {
+                dot.classList.add("online");
+                txt.innerText = "API Pronta";
+            } else {
+                dot.classList.remove("online");
+                txt.innerText = "API Sem Chave";
+            }
+        }
+
+        // Backup de conversas do usuário em JSON
+        document.getElementById("backup-chat-btn").addEventListener("click", () => {
+            const historico = localStorage.getItem(`diamante_hist_${currentUser.email}`);
+            if (!historico || historico === "[]") return alert("Histórico de mensagens vazio para exportação.");
+
+            const blob = new Blob([historico], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup_diamantebot_${currentUser.email}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById("clear-chat-btn").addEventListener("click", () => {
+            if (confirm("Deseja apagar permanentemente o seu histórico local de conversações?")) {
+                localStorage.removeItem(`diamante_hist_${currentUser.email}`);
+                chatWindow.innerHTML = "";
+                userDrawer.classList.remove("active");
+            }
+        });
+
+        // LEITURA REAL DE ARQUIVOS COM FILTRO INTELIGENTE ANTI-SURGIMENTO DE LIXO BINÁRIO (NATIVO)
+        fileUpload.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            attachedFileName = file.name;
+            fileBadge.innerText = `📎 Carregando: ${file.name}`;
+            fileBadge.style.display = "inline-block";
+
+            if (file.name.endsWith('.zip')) {
+                uploadProgressContainer.style.display = "block";
+                uploadProgressBar.style.width = "10%";
+                uploadPercentage.innerText = "10%";
+
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    uploadProgressBar.style.width = "30%";
+                    uploadPercentage.innerText = "30%";
+
+                    JSZip.loadAsync(evt.target.result).then(function(zip) {
+                        uploadProgressBar.style.width = "60%";
+                        uploadPercentage.innerText = "60%";
+                        
+                        let totalFilesText = `--- CONTEÚDO ESTRUTURADO EXTRAÍDO DO ARQUIVO ZIP: ${file.name} ---\n`;
+                        const fileReadPromises = [];
+
+                        // Extensões permitidas pelo filtro estrutural inteligente
+                        const extensoesSuportadas = ['.html', '.css', '.js', '.py', '.txt', '.json', '.php', '.ts', '.jsx', '.tsx', '.c', '.cpp', '.cs', '.java'];
+
+                        zip.forEach(function (relativePath, zipEntry) {
+                            if (!zipEntry.dir && !zipEntry.name.includes('__MACOSX') && !zipEntry.name.includes('.DS_Store')) {
+                                const nomeMinusculo = zipEntry.name.toLowerCase();
+                                const ehValido = extensoesSuportadas.some(ext => nomeMinusculo.endsWith(ext));
+
+                                if (ehValido) {
+                                    const promise = zipEntry.async("text").then(function (content) {
+                                        totalFilesText += `\n[Arquivo Encontrado: ${relativePath}]\n\`\`\`\n${content}\n\`\`\`\n`;
+                                    });
+                                    fileReadPromises.push(promise);
+                                }
+                            }
+                        });
+
+                        Promise.all(fileReadPromises).then(function() {
+                            rawAttachedFileContent = totalFilesText;
+                            uploadProgressBar.style.width = "100%";
+                            uploadPercentage.innerText = "100%";
+                            fileBadge.innerText = `📎 ZIP Filtrado: ${file.name} (Códigos Prontos)`;
+                            setTimeout(() => { uploadProgressContainer.style.display = "none"; }, 500);
+                        });
+                    }).catch(function(err) {
+                        alert("Falha na descompressão do pacote: " + err.message);
+                        resetAnexo();
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    rawAttachedFileContent = `\n--- ARQUIVO COMPLEMENTAR INDIVIDUAL: ${file.name} ---\n\`\`\`\n${evt.target.result}\n\`\`\`\n`;
+                    fileBadge.innerText = `📎 Pronto: ${file.name}`;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function resetAnexo() {
+            rawAttachedFileContent = "";
+            attachedFileName = "";
+            fileUpload.value = "";
+            fileBadge.style.display = "none";
+        }
+        function renderizarMensagem(texto, remetente, tempo = "Agora") {
+            const wrapper = document.createElement("div");
+            wrapper.className = `bubble-wrapper ${remetente}`;
+
+            if (remetente === "ai") {
+                const avatarDiv = document.createElement("div");
+                avatarDiv.className = "chat-avatar";
+                avatarDiv.innerHTML = `<img src="${localStorage.getItem('diamante_asset_avatar') || DEFAULT_BOT_AVATAR}" class="global-bot-img" style="width:100%; height:100%; object-fit:cover;">`;
+                wrapper.appendChild(avatarDiv);
+            }
+
+            const bubble = document.createElement("div");
+            bubble.className = `bubble ${remetente}`;
+
+            if (texto.includes("```")) {
+                const partes = texto.split("```");
+                for (let i = 0; i < partes.length; i++) {
+                    if (i % 2 === 1) {
+                        const pre = document.createElement("pre");
+                        pre.innerText = partes[i].replace(/^[a-zA-Z]+\n/, "");
+                        bubble.appendChild(pre);
+                    } else {
+                        const span = document.createElement("span");
+                        span.innerText = partes[i];
+                        bubble.appendChild(span);
+                    }
+                }
+            } else {
+                bubble.innerText = texto;
+            }
+
+            const time = document.createElement("div");
+            time.className = "msg-time";
+            time.innerText = tempo;
+
+            bubble.appendChild(time);
+            wrapper.appendChild(bubble);
+            return wrapper;
+        }
+
+        function carregarHistoricoChat() {
+            chatWindow.innerHTML = "";
+            const historico = JSON.parse(localStorage.getItem(`diamante_hist_${currentUser.email}`)) || [];
+            historico.forEach(msg => {
+                chatWindow.appendChild(renderizarMensagem(msg.text, msg.sender, msg.timestamp));
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function salvarMensagemNoHistorico(texto, remetente, tempo) {
+            const historico = JSON.parse(localStorage.getItem(`diamante_hist_${currentUser.email}`)) || [];
+            historico.push({ text: texto, sender: remetente, timestamp: tempo });
+            localStorage.setItem(`diamante_hist_${currentUser.email}`, JSON.stringify(historico));
+        }
+
+        sendBtn.addEventListener("click", enviarMensagemCompleta);
+        msgInput.addEventListener("keypress", (e) => { if (e.key === "Enter") enviarMensagemCompleta(); });
+
+        async function enviarMensagemCompleta() {
+            const textoMensagem = msgInput.value.trim();
+            if (!textoMensagem && !rawAttachedFileContent) return;
+
+            msgInput.value = "";
+            const timestampAtual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            let mensagemExibicaoUsuario = textoMensagem;
+            if (attachedFileName) {
+                mensagemExibicaoUsuario += `\n[Arquivo indexado: ${attachedFileName}]`;
+            }
+
+            chatWindow.appendChild(renderizarMensagem(mensagemExibicaoUsuario, "me", timestampAtual));
+            salvarMensagemNoHistorico(mensagemExibicaoUsuario, "me", timestampAtual);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            const promptFinalParaIA = textoMensagem + "\n" + rawAttachedFileContent;
+            resetAnexo();
+
+            await processarRespostaGemini(promptFinalParaIA);
+        }
+
+        async function processarRespostaGemini(promptCompleto) {
+            const chavesDisponiveis = [
+                localStorage.getItem("diamante_key_1") || "",
+                localStorage.getItem("diamante_key_2") || "",
+                localStorage.getItem("diamante_key_3") || ""
+            ].filter(k => k !== "");
+
+            const modeloSelecionado = document.getElementById("user-model").value;
+            const timestampResposta = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (chavesDisponiveis.length === 0) {
+                const erroMsg = "Erro do Sistema: Nenhuma chave de API configurada no Painel Admin. Peça ao administrador para salvar uma chave estável do Gemini.";
+                chatWindow.appendChild(renderizarMensagem(erroMsg, "ai", timestampResposta));
+                salvarMensagemNoHistorico(erroMsg, "ai", timestampResposta);
+                return;
+            }
+
+            let sucesso = false;
+            let textoRespostaIA = "";
+
+            for (let i = 0; i < chavesDisponiveis.length; i++) {
+                const apiKey = chavesDisponiveis[i];
+                const urlApi = `googleapis.com{modeloSelecionado}:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(urlApi, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptCompleto }] }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                        textoRespostaIA = data.candidates[0].content.parts[0].text;
+                        sucesso = true;
+                        break;
+                    }
+                } catch (err) {
+                    console.warn(`A chave da posição ${i + 1} falhou. Verificando fallback...`);
+                }
+            }
+
+            if (!sucesso) {
+                textoRespostaIA = "Todas as chaves de API falharam no processamento. Garanta que as chaves salvas sejam válidas e possuam cota ativa no Google AI Studio.";
+            }
+
+            chatWindow.appendChild(renderizarMensagem(textoRespostaIA, "ai", timestampResposta));
+            salvarMensagemNoHistorico(textoRespostaIA, "ai", timestampResposta);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+        function carregarHistoricoChat() {
+            chatWindow.innerHTML = "";
+            const historico = JSON.parse(localStorage.getItem(`diamante_hist_${currentUser.email}`)) || [];
+            historico.forEach(msg => {
+                chatWindow.appendChild(renderizarMensagem(msg.text, msg.sender, msg.timestamp));
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function salvarMensagemNoHistorico(texto, remetente, tempo) {
+            const historico = JSON.parse(localStorage.getItem(`diamante_hist_${currentUser.email}`)) || [];
+            historico.push({ text: texto, sender: remetente, timestamp: tempo });
+            localStorage.setItem(`diamante_hist_${currentUser.email}`, JSON.stringify(historico));
+        }
+       sendBtn.addEventListener("click", enviarMensagemCompleta);
+        msgInput.addEventListener("keypress", (e) => { if (e.key === "Enter") enviarMensagemCompleta(); });
+
+        async function enviarMensagemCompleta() {
+            const textoMensagem = msgInput.value.trim();
+            if (!textoMensagem && !rawAttachedFileContent) return;
+
+            msgInput.value = "";
+            const timestampAtual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            let mensagemExibicaoUsuario = textoMensagem;
+            if (attachedFileName) {
+                mensagemExibicaoUsuario += `\n[Arquivo indexado: ${attachedFileName}]`;
+            }
+
+            chatWindow.appendChild(renderizarMensagem(mensagemExibicaoUsuario, "me", timestampAtual));
+            salvarMensagemNoHistorico(mensagemExibicaoUsuario, "me", timestampAtual);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            const promptFinalParaIA = textoMensagem + "\n" + rawAttachedFileContent;
+            resetAnexo();
+
+            await processarRespostaGemini(promptFinalParaIA);
+        }
+
+        async function processarRespostaGemini(promptCompleto) {
+            const chavesDisponiveis = [
+                localStorage.getItem("diamante_key_1") || "",
+                localStorage.getItem("diamante_key_2") || "",
+                localStorage.getItem("diamante_key_3") || ""
+            ].filter(k => k !== "");
+
+            const modeloSelecionado = document.getElementById("user-model").value;
+            const timestampResposta = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (chavesDisponiveis.length === 0) {
+                const erroMsg = "Erro do Sistema: Nenhuma chave de API configurada no Painel Admin. Peça ao administrador para salvar uma chave estável do Gemini.";
+                chatWindow.appendChild(renderizarMensagem(erroMsg, "ai", timestampResposta));
+                salvarMensagemNoHistorico(erroMsg, "ai", timestampResposta);
+                return;
+            }
+
+            let sucesso = false;
+            let textoRespostaIA = "";
+
+            for (let i = 0; i < chavesDisponiveis.length; i++) {
+                const apiKey = chavesDisponiveis[i];
+                const urlApi = `googleapis.com{modeloSelecionado}:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(urlApi, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptCompleto }] }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                        textoRespostaIA = data.candidates[0].content.parts[0].text;
+                        sucesso = true;
+                        break;
+                    }
+                } catch (err) {
+                    console.warn(`A chave da posição ${i + 1} falhou. Verificando fallback...`);
+                }
+            }
+
+            if (!sucesso) {
+                textoRespostaIA = "Todas as chaves de API falharam no processamento. Garanta que as chaves salvas sejam válidas e possuam cota ativa no Google AI Studio.";
+            }
+
+            chatWindow.appendChild(renderizarMensagem(textoRespostaIA, "ai", timestampResposta));
+            salvarMensagemNoHistorico(textoRespostaIA, "ai", timestampResposta);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
