@@ -22,9 +22,10 @@
         html, body { 
             height: 100%; margin: 0; padding: 0; overflow: hidden; 
             background: var(--wa-bg); display: flex; flex-direction: column;
+            font-family: Segoe UI, Helvetica Neue, Helvetica, Lucida Grande, Arial, Ubuntu, Cantarell, Fira Sans, sans-serif;
         }
 
-        /* LOGIN SCREEN - MANTIDO */
+        /* TELA DE LOGIN */
         #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1a1a1a 0%, #050a0d 100%); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { background: rgba(34, 46, 53, 0.95); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(0, 229, 255, 0.2); }
         .auth-logo-container { width: 100px; height: 100px; border-radius: 50%; overflow: hidden; margin: 0 auto 15px; border: 2px solid var(--diamond-glow); cursor: pointer; }
@@ -32,8 +33,8 @@
         .auth-input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #333; background: var(--wa-input); color: white; outline: none; }
         .btn-diamond { background: linear-gradient(45deg, #008cff, #00e5ff); color: #000; border: none; padding: 12px; border-radius: 30px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
-        /* APP ESTRUTURA - AGREGADO LAYOUT FLEX */
-        #app-main { display: none; flex-direction: column; height: 100vh; width: 100vw; background-color: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        /* APP ESTRUTURA */
+        #app-main { display: none; flex-direction: column; height: 100vh; width: 100vw; background-color: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: cover; background-position: center; }
 
         header { background: var(--wa-header); padding: 10px 15px; display: flex; align-items: center; gap: 12px; height: 65px; flex-shrink: 0; z-index: 10; }
         .avatar-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 2px solid var(--diamond-glow); cursor: pointer; }
@@ -41,96 +42,135 @@
 
         #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
 
-        /* BUBBLES MANTIDAS */
-        .bubble-wrapper { display: flex; width: 100%; }
+        /* BALÕES DE MENSAGEM */
+        .bubble-wrapper { display: flex; width: 100%; margin-bottom: 4px; }
         .bubble-wrapper.me { justify-content: flex-end; }
-        .bubble { max-width: 85%; padding: 10px 15px; border-radius: 15px; font-size: 15px; line-height: 1.4; position: relative; }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; }
         .bubble.me { background: var(--wa-msg-me); color: white; border-top-right-radius: 0; }
         .bubble.ai { background: var(--wa-msg-ai); color: #e9edef; border-top-left-radius: 0; }
 
-        /* RODAPÉ WHATSAPP STYLE - AGREGADO */
-        footer { background: transparent; padding: 8px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+        /* ÁUDIO E DOWNLOADS */
+        .file-box { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px; margin-top: 5px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-download { background: var(--wa-green); color: white; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-block; margin-top: 5px; }
+        audio { height: 35px; width: 100%; margin-top: 5px; filter: invert(1); }
+
+        /* RODAPÉ FIXO */
+        footer { background: #f0f2f5; padding: 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .input-bar-container { flex: 1; background: white; border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 10px; min-height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         #msg-input { flex: 1; background: transparent; border: none; color: #111; padding: 10px 0; outline: none; font-size: 16px; }
         .action-icon { color: #54656f; font-size: 22px; cursor: pointer; }
-        .btn-send-wa { background: var(--wa-green); border: none; width: 48px; height: 48px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn-send-wa { background: var(--wa-green); border: none; width: 48px; height: 48px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 
+        /* UI DE GRAVAÇÃO */
+        #recording-ui { display: none; flex: 1; align-items: center; gap: 10px; color: #ff3b30; }
+        .rec-dot { width: 10px; height: 10px; background: red; border-radius: 50%; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* PAINEL ADM */
         .drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #111b21; z-index: 20000; transition: 0.3s; padding: 20px; border-left: 2px solid var(--diamond-glow); overflow-y: auto; }
         .drawer.active { right: 0; }
         .section-card { background: #1e2a30; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--diamond-glow); }
+        .section-card b { color: #8696a0; display: block; margin-bottom: 5px; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <input type="file" id="file-up" style="display:none" multiple onchange="handleFiles(event)">
     <input type="file" id="change-avatar" style="display:none" accept="image/*" onchange="updateAllAvatars(event)">
+    <input type="file" id="change-wallpaper" style="display:none" accept="image/*" onchange="updateWallpaper(event)">
 
+    <!-- TELA DE LOGIN -->
     <div id="auth-screen">
         <div class="auth-card">
             <div class="auth-logo-container" onclick="document.getElementById('change-avatar').click()">
-                <img src="https://i.imgur.com/89S9fT3.png" class="auth-logo-img sync-avatar" id="login-avatar">
+                <img src="https://i.imgur.com/89S9fT3.png" class="auth-logo-img sync-avatar">
             </div>
             <h2 style="color:var(--diamond-glow);">DIAMANTE BOT</h2>
             <input type="email" id="auth-email" class="auth-input" placeholder="E-mail">
             <input type="password" id="auth-pass" class="auth-input" placeholder="Senha">
             <button class="btn-diamond" id="login-btn">ENTRAR</button>
-            <div style="margin: 15px 0; color: #8696a0; font-size: 12px;">OU</div>
+            <div style="margin: 15px 0; color: #8696a0; font-size: 12px;">OU ACESSE COM GOOGLE</div>
             <div id="g_id_onload" data-client_id="296654630911-tvpnofs4m5rkp4n7sj67g8bd12iu3qrg.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
             <div class="g_id_signin" data-type="standard"></div>
         </div>
     </div>
 
+    <!-- TELA PRINCIPAL -->
     <div id="app-main">
         <header>
             <div class="avatar-container" onclick="document.getElementById('change-avatar').click()">
-                <img src="https://i.imgur.com/89S9fT3.png" class="avatar-img sync-avatar" id="chat-avatar">
+                <img src="https://i.imgur.com/89S9fT3.png" class="avatar-img sync-avatar">
             </div>
             <div style="flex:1">
-                <h4 style="font-size: 16px; color: white;">DIAMANTE BOT</h4>
+                <h4 style="font-size: 16px; color: white; margin:0">DIAMANTE BOT</h4>
                 <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#8696a0;">
                     <div id="status-dot" style="width:8px; height:8px; border-radius:50%; background:#ff3d00;"></div>
                     <span id="status-text">Offline</span>
                 </div>
             </div>
             <i class="fa-solid fa-sliders action-icon" id="open-adm" style="display:none; color: white;"></i>
-            <i class="fa-solid fa-right-from-bracket action-icon" id="logout-btn" style="color: white;"></i>
+            <i class="fa-solid fa-right-from-bracket action-icon" id="logout-btn" style="color: white; margin-left:10px"></i>
         </header>
 
         <main id="chat-window"></main>
 
         <footer>
             <div class="input-bar-container">
-                <i class="fa-solid fa-paperclip action-icon" onclick="document.getElementById('file-up').click()"></i>
-                <input type="text" id="msg-input" placeholder="Mensagem">
-                <i class="fa-solid fa-camera action-icon"></i>
+                <div id="normal-ui" style="display: flex; flex: 1; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-paperclip action-icon" onclick="document.getElementById('file-up').click()"></i>
+                    <input type="text" id="msg-input" placeholder="Mensagem">
+                </div>
+                <div id="recording-ui">
+                    <div class="rec-dot"></div>
+                    <span id="rec-timer">00:00</span>
+                    <span style="flex:1; color:#8696a0; font-size:14px; margin-left:10px">Gravando...</span>
+                    <i class="fa-solid fa-trash action-icon" style="color:red" onclick="cancelAudio()"></i>
+                </div>
             </div>
-            <button id="send-btn" class="btn-send-wa"><i class="fa-solid fa-paper-plane" id="send-icon"></i></button>
+            <button id="send-btn" class="btn-send-wa">
+                <i class="fa-solid fa-microphone" id="send-icon"></i>
+            </button>
         </footer>
     </div>
 
+    <!-- PAINEL ADM -->
     <div id="adm-panel" class="drawer">
-        <h3 style="color:var(--diamond-glow)">MASTER ADMIN</h3>
+        <h3 style="color:var(--diamond-glow)">CONFIGURAÇÕES MASTER</h3>
         <div class="section-card">
             <b>Chaves API Gemini (3 Slots)</b>
             <input type="password" id="k1" class="auth-input" placeholder="Chave Principal">
             <input type="password" id="k2" class="auth-input" placeholder="Chave Reserva 1">
             <input type="password" id="k3" class="auth-input" placeholder="Chave Reserva 2">
             
-            <b style="margin-top:10px; display:block;">Adicionar Administradores</b>
+            <b style="margin-top:10px;">Administradores</b>
             <input type="email" id="adm2" class="auth-input" placeholder="E-mail ADM 2">
             <input type="email" id="adm3" class="auth-input" placeholder="E-mail ADM 3">
             
+            <b style="margin-top:10px;">Personalização</b>
+            <button class="btn-diamond" style="background:#2a3942; color:var(--diamond-glow); border:1px solid" onclick="document.getElementById('change-wallpaper').click()">MUDAR FUNDO DO CHAT</button>
+            
             <button class="btn-diamond" id="save-adm">SALVAR TUDO</button>
         </div>
-        <button class="btn-diamond" style="background:#333; color:white" id="close-adm">VOLTAR AO CHAT</button>
+        <button class="btn-diamond" style="background:#333; color:white" id="close-adm">FECHAR PAINEL</button>
     </div>
 
     <script>
         const MASTER_EMAIL = "andersoncleyton2022@gmail.com";
         const MASTER_PASS = "339317";
         let attContent = "";
+        let mediaRec;
+        let audioChunks = [];
+        let isRecording = false;
+        let timerInt;
 
-        // Mudar Foto (Agregado)
+        const msgInp = document.getElementById("msg-input");
+        const sendIcon = document.getElementById("send-icon");
+
+        // Muda ícone ao digitar
+        msgInp.oninput = () => {
+            sendIcon.className = msgInp.value.trim() ? "fa-solid fa-paper-plane" : "fa-solid fa-microphone";
+        };
+
         function updateAllAvatars(e) {
             const file = e.target.files[0];
             if(file) {
@@ -138,6 +178,18 @@
                 reader.onload = (ev) => {
                     document.querySelectorAll('.sync-avatar').forEach(img => img.src = ev.target.result);
                     localStorage.setItem("user_avatar", ev.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateWallpaper(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    document.getElementById('app-main').style.backgroundImage = `url('${ev.target.result}')`;
+                    localStorage.setItem("app_wallpaper", ev.target.result);
                 };
                 reader.readAsDataURL(file);
             }
@@ -151,9 +203,7 @@
             const extraAdm2 = localStorage.getItem("adm2");
             const extraAdm3 = localStorage.getItem("adm3");
 
-            if(email === MASTER_EMAIL && pass === MASTER_PASS) {
-                iniciar(true);
-            } else if (email === extraAdm2 || email === extraAdm3) {
+            if((email === MASTER_EMAIL && pass === MASTER_PASS) || email === extraAdm2 || email === extraAdm3) {
                 iniciar(true);
             } else { alert("Acesso Negado!"); }
         };
@@ -168,24 +218,68 @@
         async function handleFiles(e) {
             attContent = "--- ARQUIVOS ---\n";
             for(let f of e.target.files) {
+                renderFile(f, "me");
                 const t = await f.text();
-                attContent += `\n[${f.name}]\n${t}\n`;
+                attContent += `\n[ARQUIVO: ${f.name}]\n${t}\n`;
             }
-            alert("Arquivos anexados com sucesso!");
         }
 
-        async function enviar() {
-            const inp = document.getElementById("msg-input");
-            if(!inp.value && !attContent) return;
-            render(inp.value || "Arquivo enviado", "me");
-            const p = inp.value + "\n" + attContent;
-            inp.value = ""; attContent = "";
+        document.getElementById("send-btn").onclick = async () => {
+            if(sendIcon.className.includes("microphone") && !msgInp.value.trim()) {
+                if(!isRecording) startAudio(); else stopAudio();
+                return;
+            }
+            if(!msgInp.value && !attContent) return;
+            render(msgInp.value, "me");
+            const p = msgInp.value + "\n" + attContent;
+            msgInp.value = ""; attContent = "";
+            sendIcon.className = "fa-solid fa-microphone";
             await call(p);
+        };
+
+        async function startAudio() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRec = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRec.ondataavailable = e => audioChunks.push(e.data);
+                mediaRec.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    renderAudio(blob, "me");
+                    call("O usuário enviou uma mensagem de voz.");
+                };
+                mediaRec.start();
+                isRecording = true;
+                document.getElementById("normal-ui").style.display = "none";
+                document.getElementById("recording-ui").style.display = "flex";
+                sendIcon.className = "fa-solid fa-check";
+                let s = 0;
+                timerInt = setInterval(() => {
+                    s++;
+                    let m = Math.floor(s/60);
+                    document.getElementById("rec-timer").innerText = `${m.toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+                }, 1000);
+            } catch(e) { alert("Erro ao acessar microfone."); }
+        }
+
+        function stopAudio() {
+            if(mediaRec) mediaRec.stop();
+            isRecording = false;
+            clearInterval(timerInt);
+            document.getElementById("normal-ui").style.display = "flex";
+            document.getElementById("recording-ui").style.display = "none";
+            sendIcon.className = "fa-solid fa-microphone";
+            document.getElementById("rec-timer").innerText = "00:00";
+        }
+
+        function cancelAudio() {
+            if(mediaRec) { mediaRec.onstop = null; mediaRec.stop(); }
+            stopAudio();
         }
 
         async function call(p) {
             const keys = [localStorage.getItem("k1"), localStorage.getItem("k2"), localStorage.getItem("k3")].filter(k=>k);
-            if(!keys.length) return render("Erro: Sem chaves configuradas no ADM!", "ai");
+            if(!keys.length) return render("Erro: Configure sua API no Painel ADM!", "ai");
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${keys[0]}`, {
                     method: "POST",
@@ -193,15 +287,45 @@
                     body: JSON.stringify({contents:[{parts:[{text:p}]}]})
                 });
                 const d = await r.json();
-                render(d.candidates[0].content.parts[0].text, "ai");
-            } catch(e) { render("Erro ao conectar com a API Gemini.", "ai"); }
+                const respText = d.candidates[0].content.parts[0].text;
+                render(respText, "ai");
+                if(respText.includes("```")) {
+                    const match = respText.match(/
+                        if(m) renderFile(new File([m[1]], "codigo.txt", {type:"text/plain"}), "ai");
+                }
+            } catch(e) { render("Erro de conexão.", "ai"); }
         }
 
         function render(t, tipo) {
+            if(!t) return;
             const c = document.getElementById("chat-window");
             const d = document.createElement("div");
             d.className = `bubble-wrapper ${tipo}`;
             d.innerHTML = `<div class="bubble ${tipo}">${t.replace(/\n/g,'<br>')}</div>`;
+            c.appendChild(d);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function renderFile(f, tipo) {
+            const c = document.getElementById("chat-window");
+            const d = document.createElement("div");
+            d.className = `bubble-wrapper ${tipo}`;
+            const url = URL.createObjectURL(f);
+            d.innerHTML = `
+                <div class="bubble ${tipo}">
+                    <div class="file-attach"><i class="fa-solid fa-file"></i> <span>${f.name}</span></div>
+                    <a href="${url}" download="${f.name}" class="btn-dl" style="display:block; text-align:center; margin-top:5px">BAIXAR</a>
+                </div>`;
+            c.appendChild(d);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function renderAudio(blob, tipo) {
+            const c = document.getElementById("chat-window");
+            const d = document.createElement("div");
+            d.className = `bubble-wrapper ${tipo}`;
+            const url = URL.createObjectURL(blob);
+            d.innerHTML = `<div class="bubble ${tipo}"><audio controls src="${url}"></audio></div>`;
             c.appendChild(d);
             c.scrollTop = c.scrollHeight;
         }
@@ -217,7 +341,7 @@
             localStorage.setItem("adm3", document.getElementById("adm3").value.trim().toLowerCase());
             document.getElementById("status-dot").style.background = "#00e676";
             document.getElementById("status-text").innerText = "Sistema Online";
-            alert("Configurações Master Salvas!");
+            alert("Salvo com sucesso!");
         };
 
         function load() {
@@ -226,25 +350,16 @@
             document.getElementById("k3").value = localStorage.getItem("k3") || "";
             document.getElementById("adm2").value = localStorage.getItem("adm2") || "";
             document.getElementById("adm3").value = localStorage.getItem("adm3") || "";
-            
-            const savedAvatar = localStorage.getItem("user_avatar");
-            if(savedAvatar) {
-                document.querySelectorAll('.sync-avatar').forEach(img => img.src = savedAvatar);
-            }
-
+            const av = localStorage.getItem("user_avatar");
+            if(av) document.querySelectorAll('.sync-avatar').forEach(img => img.src = av);
+            const bg = localStorage.getItem("app_wall");
+            if(bg) document.getElementById('app-main').style.backgroundImage = `url('${bg}')`;
             if(localStorage.getItem("k1")) {
                 document.getElementById("status-dot").style.background = "#00e676";
                 document.getElementById("status-text").innerText = "Sistema Online";
             }
         }
-
-        document.getElementById("send-btn").onclick = enviar;
         document.getElementById("logout-btn").onclick = () => location.reload();
-        
-        // Enter para enviar no celular
-        document.getElementById("msg-input").addEventListener("keypress", (e) => {
-            if(e.key === "Enter") enviar();
-        });
     </script>
 </body>
 </html>
