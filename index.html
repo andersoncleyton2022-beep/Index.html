@@ -79,7 +79,6 @@
     <input type="file" id="change-avatar" style="display:none" accept="image/*" onchange="updateAllAvatars(event)">
     <input type="file" id="change-wallpaper" style="display:none" accept="image/*" onchange="updateWallpaper(event)">
 
-    <!-- TELA DE LOGIN -->
     <div id="auth-screen">
         <div class="auth-card">
             <div class="auth-logo-container" onclick="document.getElementById('change-avatar').click()">
@@ -87,7 +86,12 @@
             </div>
             <h2 style="color:var(--diamond-glow);">DIAMANTE BOT</h2>
             <input type="email" id="auth-email" class="auth-input" placeholder="E-mail">
-            <input type="password" id="auth-pass" class="auth-input" placeholder="Senha">
+            
+            <div style="position: relative; width: 100%;">
+                <input type="password" id="auth-pass" class="auth-input" placeholder="Senha">
+                <i class="fa-solid fa-eye" id="toggle-pass" style="position: absolute; right: 15px; top: 20px; color: #8696a0; cursor: pointer;"></i>
+            </div>
+
             <button class="btn-diamond" id="login-btn">ENTRAR</button>
             <div style="margin: 15px 0; color: #8696a0; font-size: 12px;">OU ACESSE COM GOOGLE</div>
             <div id="g_id_onload" data-client_id="296654630911-tvpnofs4m5rkp4n7sj67g8bd12iu3qrg.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
@@ -95,7 +99,6 @@
         </div>
     </div>
 
-    <!-- TELA PRINCIPAL -->
     <div id="app-main">
         <header>
             <div class="avatar-container" onclick="document.getElementById('change-avatar').click()">
@@ -133,7 +136,6 @@
         </footer>
     </div>
 
-    <!-- PAINEL ADM -->
     <div id="adm-panel" class="drawer">
         <h3 style="color:var(--diamond-glow)">CONFIGURAÇÕES MASTER</h3>
         <div class="section-card">
@@ -156,7 +158,7 @@
 
     <script>
         const MASTER_EMAIL = "andersoncleyton2022@gmail.com";
-        const MASTER_PASS = "339317";
+        const MASTER_PASS = "3393";
         let attContent = "";
         let mediaRec;
         let audioChunks = [];
@@ -165,6 +167,18 @@
 
         const msgInp = document.getElementById("msg-input");
         const sendIcon = document.getElementById("send-icon");
+
+        // Lógica do Olhinho para mostrar senha
+        document.getElementById("toggle-pass").onclick = function() {
+            const passInput = document.getElementById("auth-pass");
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                this.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                passInput.type = "password";
+                this.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        };
 
         // Muda ícone ao digitar
         msgInp.oninput = () => {
@@ -290,8 +304,8 @@
                 const respText = d.candidates[0].content.parts[0].text;
                 render(respText, "ai");
                 if(respText.includes("```")) {
-                    const match = respText.match(/
-                        if(m) renderFile(new File([m[1]], "codigo.txt", {type:"text/plain"}), "ai");
+                    const match = respText.match(/```([\s\S]*?)```/);
+                    if(match) renderFile(new File([match[1]], "codigo.txt", {type:"text/plain"}), "ai");
                 }
             } catch(e) { render("Erro de conexão.", "ai"); }
         }
@@ -314,7 +328,7 @@
             d.innerHTML = `
                 <div class="bubble ${tipo}">
                     <div class="file-attach"><i class="fa-solid fa-file"></i> <span>${f.name}</span></div>
-                    <a href="${url}" download="${f.name}" class="btn-dl" style="display:block; text-align:center; margin-top:5px">BAIXAR</a>
+                    <a href="${url}" download="${f.name}" class="btn-download" style="display:block; text-align:center; margin-top:5px">BAIXAR</a>
                 </div>`;
             c.appendChild(d);
             c.scrollTop = c.scrollHeight;
@@ -352,7 +366,7 @@
             document.getElementById("adm3").value = localStorage.getItem("adm3") || "";
             const av = localStorage.getItem("user_avatar");
             if(av) document.querySelectorAll('.sync-avatar').forEach(img => img.src = av);
-            const bg = localStorage.getItem("app_wall");
+            const bg = localStorage.getItem("app_wallpaper");
             if(bg) document.getElementById('app-main').style.backgroundImage = `url('${bg}')`;
             if(localStorage.getItem("k1")) {
                 document.getElementById("status-dot").style.background = "#00e676";
