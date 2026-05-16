@@ -21,7 +21,17 @@
             --admin-bg-color: #1e2a30;
         }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--wa-bg); color: var(--wa-text); height: 100vh; overflow: hidden; }
+        
+        /* CORREÇÃO DO BODY PARA DISTRIBUIÇÃO EM CELULAR */
+        body { 
+            background: var(--wa-bg); 
+            color: var(--wa-text); 
+            height: 100vh; 
+            height: -webkit-fill-available; /* Garante altura real no Safari/Chrome de celular */
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
         
         /* AUTENTICAÇÃO ESTILIZADA */
         #auth-screen { 
@@ -61,11 +71,46 @@
         .btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
         
         /* CORE INTERFACE */
-        #app-main { display: none; height: 100vh; flex-direction: column; background-color: rgba(11,20,26,0.95); background-image: var(--main-bg-img); background-size: cover; background-position: center; background-blend-mode: darken; }
-        header { background: var(--wa-header); padding: 10px 15px; display: flex; align-items: center; gap: 12px; height: 60px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        #app-main { 
+            display: none; 
+            height: 100%; 
+            flex: 1;
+            flex-direction: column; 
+            background-color: rgba(11,20,26,0.95); 
+            background-image: var(--main-bg-img); 
+            background-size: cover; 
+            background-position: center; 
+            background-blend-mode: darken; 
+        }
+        
+        header { 
+            background: var(--wa-header); 
+            padding: 10px 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            height: 60px; 
+            z-index: 10; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
+            flex-shrink: 0;
+        }
         .avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #3b4a54; display: flex; align-items: center; justify-content: center; border: 2px solid var(--wa-green); }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; background-image: var(--chat-bg-img); background-size: cover; background-position: center; }
+        
+        /* CORREÇÃO DO CHAT WINDOW PARA ROLAGEM E ADAPTAÇÃO */
+        #chat-window { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            scroll-behavior: smooth; 
+            background-image: var(--chat-bg-img); 
+            background-size: cover; 
+            background-position: center;
+            -webkit-overflow-scrolling: touch; /* Rolagem macia no celular */
+        }
         
         /* MONITOR DE STATUS DA API */
         .status-dot-container { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8696a0; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 12px; }
@@ -77,14 +122,27 @@
         .bubble-wrapper.me { justify-content: flex-end; }
         .bubble-wrapper.ai { justify-content: flex-start; }
         .chat-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wa-green); }
-        .bubble { max-width: 75%; padding: 10px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        
+        /* AJUSTE DO BALÃO PARA INTERFACE MOBILE */
+        .bubble { 
+            max-width: 85%; /* Aproveita melhor o espaço em telas estreitas */
+            padding: 10px 14px; 
+            border-radius: 10px; 
+            font-size: 15px; 
+            line-height: 1.4; 
+            position: relative; 
+            word-wrap: break-word; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
+            display: flex; 
+            flex-direction: column; 
+        }
         .bubble.me { background: var(--wa-msg-me); border-top-right-radius: 0; text-align: left; }
         .bubble.ai { background: var(--wa-msg-ai); border-top-left-radius: 0; text-align: left; }
         .msg-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 6px; align-self: flex-end; }
         pre { background: #000; color: #00ff00; padding: 12px; border-radius: 8px; font-family: monospace; overflow-x: auto; margin-top: 8px; font-size: 13px; white-space: pre-wrap; text-align: left; width: 100%; border: 1px solid rgba(255,255,255,0.1); }
         
         /* PROGRESSO */
-        #upload-progress-container { display: none; background: var(--wa-header); padding: 10px 15px; border-bottom: 2px solid #004d40; }
+        #upload-progress-container { display: none; background: var(--wa-header); padding: 10px 15px; border-bottom: 2px solid #004d40; flex-shrink: 0; }
         .progress-bar-bg { background: var(--wa-input); width: 100%; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
         .progress-bar-fill { background: var(--wa-accent); width: 0%; height: 100%; transition: width 0.3s ease; }
         
@@ -94,9 +152,18 @@
         .section-card { background: var(--admin-bg-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid var(--wa-green); transition: background 0.3s; }
         .section-card.admin-card { border-left-color: #ff3d00; }
         
-        /* RODAPÉ DE ENTRADA COM ÁUDIO */
-        footer { background: var(--wa-header); padding: 10px; display: flex; align-items: center; gap: 10px; height: 65px; }
-        .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; }
+        /* RODAPÉ DE ENTRADA CORRIGIDO E SEMPRE FIXADO EMBAIXO */
+        footer { 
+            background: var(--wa-header); 
+            padding: 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            height: 65px; 
+            flex-shrink: 0; /* Impede o rodapé de ser esmagado */
+            width: 100%;
+        }
+        .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; height: 100%; }
         #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px 5px; outline: none; font-size: 16px; }
         .action-icon { color: #8696a0; font-size: 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
         .action-icon:hover { color: white; }
@@ -667,7 +734,6 @@
 
             for (let i = 0; i < chavesDisponiveis.length; i++) {
                 const apiKey = chavesDisponiveis[i];
-                // URL corrigida de acordo com os padrões globais da API REST do Google Gemini
                 const urlApi = `https://generativelanguage.googleapis.com/v1beta/models/${modeloSelecionado}:generateContent?key=${apiKey}`;
 
                 try {
@@ -737,7 +803,7 @@
                 }
             });
         } else {
-            micBtn.style.display = "none"; // Oculta se o navegador do celular não possuir suporte
+            micBtn.style.display = "none"; 
         }
     </script>
 </body>
