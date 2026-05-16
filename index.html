@@ -171,7 +171,6 @@
             position: sticky;
             bottom: 0;
             z-index: 15;
-            /* Garante afastamento seguro da barra de navegação virtual */
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
             box-sizing: border-box;
         }
@@ -450,7 +449,8 @@
             }
         });
 
-        function efetuvarLoginSessao(email, isAdmin) {
+        // FUNÇÃO TOTALMENTE SINCRO-CORRIGIDA AQUI ABAIXO
+        function efetuarLoginSessao(email, isAdmin) {
             currentUser = { email: email, isAdmin: isAdmin };
             authScreen.style.display = "none";
             appMain.style.display = "flex";
@@ -870,4 +870,3 @@
     </script>
 </body>
 </html>
-
