@@ -171,7 +171,7 @@
             position: sticky;
             bottom: 0;
             z-index: 15;
-            /* Garante afastamento seguro da barra de navegação virtual do Poco C65 */
+            /* Garante afastamento seguro da barra de navegação virtual */
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
             box-sizing: border-box;
         }
@@ -372,14 +372,20 @@
             localStorage.setItem("diamante_admins", JSON.stringify(initialAdmins));
         }
 
-        // Executar carregamento visual preventivo para a tela de login herdar fundos guardados
+        // Executar carregamento visual preventivo seguro
         carregarConfiguracoesVisuais();
 
-        // ADICIONADO: Gatilhos de clique nas bolinhas do bot para abrir galeria
-        authLogoTrigger.addEventListener("click", () => botAvatarUploader.click());
-        chatLogoTrigger.addEventListener("click", () => botAvatarUploader.click());
+        // Gatilhos de clique nas bolinhas do bot para abrir galeria (com stopPropagation para evitar conflitos)
+        authLogoTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            botAvatarUploader.click();
+        });
+        chatLogoTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            botAvatarUploader.click();
+        });
 
-        // ADICIONADO: Captura da foto selecionada e sincronização em tempo real
+        // Captura da foto selecionada e sincronização em tempo real
         botAvatarUploader.addEventListener("change", function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -388,7 +394,6 @@
             reader.onload = function(evt) {
                 const base64Image = evt.target.result;
                 aplicarAvataresGlobais(base64Image);
-                // Sincroniza também o campo de texto do painel admin caso esteja aberto
                 const urlInput = document.getElementById("url-bot-avatar");
                 if (urlInput) urlInput.value = base64Image;
             };
@@ -410,15 +415,18 @@
             switchAuthMode.innerText = authMode === "login" ? "Não tem conta? Registre-se aqui" : "Já possui uma conta? Entre aqui";
         });
 
-        // Autenticação Autônoma
+        // Autenticação Autônoma - CORRIGIDA E PROTEGIDA
         loginBtn.addEventListener("click", () => {
             const email = authEmail.value.trim().toLowerCase();
             const pass = authPass.value;
 
-            if (!email || !pass) return alert("Por favor, preencha todos os campos obrigatórios.");
+            if (!email || !pass) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
 
-            const registeredUsers = JSON.parse(localStorage.getItem("diamante_users"));
-            const registeredAdmins = JSON.parse(localStorage.getItem("diamante_admins"));
+            const registeredUsers = JSON.parse(localStorage.getItem("diamante_users")) || {};
+            const registeredAdmins = JSON.parse(localStorage.getItem("diamante_admins")) || {};
 
             if (authMode === "login") {
                 if (registeredAdmins[email] && registeredAdmins[email] === pass) {
@@ -442,7 +450,7 @@
             }
         });
 
-        function efectuarLoginSessao(email, isAdmin) {
+        function efetuvarLoginSessao(email, isAdmin) {
             currentUser = { email: email, isAdmin: isAdmin };
             authScreen.style.display = "none";
             appMain.style.display = "flex";
@@ -514,7 +522,7 @@
             document.getElementById("color-bg-admin").value = localStorage.getItem("diamante_admin_bg_color") || "#1e2a30";
             document.getElementById("shape-btn-admin").value = localStorage.getItem("diamante_btn_shape") || "30px";
 
-            const admins = JSON.parse(localStorage.getItem("diamante_admins"));
+            const admins = JSON.parse(localStorage.getItem("diamante_admins")) || {};
             const listContainer = document.getElementById("sub-admins-list");
             listContainer.innerHTML = "<b>Administradores Ativos:</b><br>";
             Object.keys(admins).forEach(admEmail => {
@@ -546,7 +554,7 @@
 
             if (!email || !pass) return alert("Forneça e-mail e senha para o novo ADM.");
 
-            const admins = JSON.parse(localStorage.getItem("diamante_admins"));
+            const admins = JSON.parse(localStorage.getItem("diamante_admins")) || {};
             admins[email] = pass;
             localStorage.setItem("diamante_admins", JSON.stringify(admins));
 
@@ -592,7 +600,7 @@
             }
         });
 
-        // MOTOR REAL DE EXTRAÇÃO E LEITURA DE ZIP / INDIVIDUAIS
+        // Extração de ZIP e arquivos individuais
         fileUpload.addEventListener("change", function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -663,7 +671,6 @@
             fileBadge.style.display = "none";
         }
 
-        // MOTOR RENDERIZADOR BLINDADO - CONTRA SUMIÇO DE BALÕES
         function renderizarMensagem(texto, remetente, tempo = "Agora") {
             const wrapper = document.createElement("div");
             wrapper.className = `bubble-wrapper ${remetente}`;
@@ -742,14 +749,14 @@
             salvarMensagemNoHistorico(mensagemExibicaoUsuario, "me", timestampAtual);
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            const promptFinalParaIA = textoMensagem + "\n" + rawAttachedFileContent;
+            const promptFinalParaIA = textoMensagem + (rawAttachedFileContent ? "\n" + rawAttachedFileContent : "");
             resetAnexo();
 
             await processarRespostaGemini(promptFinalParaIA);
         }
 
-        // COMUNICAÇÃO OFICIAL CORRIGIDA COM ROTAÇÃO DE CHAVES (FALLBACK)
-        async function processarRespostaGemini(promptCompleto) {
+        // MOTOR DE HISTÓRICO ATIVO (MULTI-TURN) COM SUPORTE A LOGS DE CÓDIGO
+        async function processarRespostaGemini(ultimoPrompt) {
             const chavesDisponiveis = [
                 localStorage.getItem("diamante_key_1") || "",
                 localStorage.getItem("diamante_key_2") || "",
@@ -767,6 +774,25 @@
                 return;
             }
 
+            const historicoLocal = JSON.parse(localStorage.getItem(`diamante_hist_${currentUser.email}`)) || [];
+            let apiContents = [];
+            
+            // Reduz e monta o histórico das últimas 20 mensagens em formato compatível com a API do Gemini
+            const historicoReduzido = historicoLocal.slice(-20);
+            historicoReduzido.forEach((msg, index) => {
+                if (index === historicoReduzido.length - 1 && msg.sender === "me") return; 
+                
+                apiContents.push({
+                    role: msg.sender === "me" ? "user" : "model",
+                    parts: [{ text: msg.text }]
+                });
+            });
+
+            apiContents.push({
+                role: "user",
+                parts: [{ text: ultimoPrompt }]
+            });
+
             let sucesso = false;
             let textoRespostaIA = "";
 
@@ -778,9 +804,7 @@
                     const response = await fetch(urlApi, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: promptCompleto }] }]
-                        })
+                        body: JSON.stringify({ contents: apiContents })
                     });
 
                     const data = await response.json();
@@ -790,12 +814,12 @@
                         break; 
                     }
                 } catch (err) {
-                    console.warn(`A chave na posição ${i + 1} falhou no envio. Tentando próxima chave de contingência...`);
+                    console.warn(`A chave na posição ${i + 1} falhou. Tentando próxima de contingência...`);
                 }
             }
 
             if (!sucesso) {
-                textoRespostaIA = "Todas as chaves de API falharam. Garanta que elas estejam ativas e com saldo disponível no Google AI Studio.";
+                textoRespostaIA = "Todas as chaves de API falharam ou o limite de contexto foi atingido. Garanta que elas estejam válidas no Google AI Studio.";
             }
 
             chatWindow.appendChild(renderizarMensagem(textoRespostaIA, "ai", timestampResposta));
@@ -803,7 +827,7 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        // IMPLEMENTAÇÃO DO MECANISMO DE RECONHECIMENTO DE VOZ (ÁUDIO PARA TEXTO)
+        // Mecanismo do Microfone (Áudio para Texto)
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -846,3 +870,4 @@
     </script>
 </body>
 </html>
+
