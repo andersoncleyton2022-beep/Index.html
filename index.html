@@ -22,15 +22,16 @@
         }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
         
-        /* CORREÇÃO DO BODY PARA DISTRIBUIÇÃO EM CELULAR */
+        /* CORREÇÃO E TRAVAMENTO DO BODY MOBILE */
         body { 
             background: var(--wa-bg); 
             color: var(--wa-text); 
             height: 100vh; 
-            height: -webkit-fill-available; /* Garante altura real no Safari/Chrome de celular */
+            height: -webkit-fill-available; /* Altura real em navegadores mobile */
             overflow: hidden; 
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         
         /* AUTENTICAÇÃO ESTILIZADA */
@@ -61,7 +62,8 @@
             border-left: 1px solid rgba(255,255,255,0.05);
             border-right: 1px solid rgba(255,255,255,0.05);
         }
-        .auth-logo-container { width: 95px; height: 95px; border-radius: 50%; overflow: hidden; margin: 0 auto 20px auto; border: 3px solid var(--wa-green); background: #3b4a54; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .auth-logo-container { width: 95px; height: 95px; border-radius: 50%; overflow: hidden; margin: 0 auto 20px auto; border: 3px solid var(--wa-green); background: #3b4a54; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; transition: 0.3s; position: relative; }
+        .auth-logo-container:hover::after { content: "\f030"; font-family: "Font Awesome 5 Free"; font-weight: 900; position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .auth-logo-img { width: 100%; height: 100%; object-fit: cover; }
         .auth-input { width: 100%; padding: 12px 15px; margin: 10px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); background: var(--wa-input); color: white; outline: none; font-size: 16px; transition: 0.3s; }
         .auth-input:focus { border-color: var(--wa-green); }
@@ -70,10 +72,11 @@
         .btn-green { background: var(--wa-green); color: white; border: none; padding: 14px; border-radius: 30px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
         
-        /* CORE INTERFACE */
+        /* CORE INTERFACE COMPACTA */
         #app-main { 
             display: none; 
-            height: 100%; 
+            height: 100vh;
+            height: -webkit-fill-available;
             flex: 1;
             flex-direction: column; 
             background-color: rgba(11,20,26,0.95); 
@@ -81,6 +84,8 @@
             background-size: cover; 
             background-position: center; 
             background-blend-mode: darken; 
+            overflow: hidden;
+            position: relative;
         }
         
         header { 
@@ -94,10 +99,11 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
             flex-shrink: 0;
         }
-        .avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #3b4a54; display: flex; align-items: center; justify-content: center; border: 2px solid var(--wa-green); }
+        .avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #3b4a54; display: flex; align-items: center; justify-content: center; border: 2px solid var(--wa-green); cursor: pointer; transition: 0.3s; position: relative; }
+        .avatar-container:hover::after { content: "\f030"; font-family: "Font Awesome 5 Free"; font-weight: 900; position: absolute; inset: 0; background: rgba(0,0,0,0.4); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* CORREÇÃO DO CHAT WINDOW PARA ROLAGEM E ADAPTAÇÃO */
+        /* FIXAÇÃO E ROLAGEM INDEPENDENTE DO HISTÓRICO */
         #chat-window { 
             flex: 1; 
             overflow-y: auto; 
@@ -109,7 +115,7 @@
             background-image: var(--chat-bg-img); 
             background-size: cover; 
             background-position: center;
-            -webkit-overflow-scrolling: touch; /* Rolagem macia no celular */
+            -webkit-overflow-scrolling: touch; /* Rolagem lisa no Poco */
         }
         
         /* MONITOR DE STATUS DA API */
@@ -125,7 +131,7 @@
         
         /* AJUSTE DO BALÃO PARA INTERFACE MOBILE */
         .bubble { 
-            max-width: 85%; /* Aproveita melhor o espaço em telas estreitas */
+            max-width: 85%; 
             padding: 10px 14px; 
             border-radius: 10px; 
             font-size: 15px; 
@@ -152,18 +158,24 @@
         .section-card { background: var(--admin-bg-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid var(--wa-green); transition: background 0.3s; }
         .section-card.admin-card { border-left-color: #ff3d00; }
         
-        /* RODAPÉ DE ENTRADA CORRIGIDO E SEMPRE FIXADO EMBAIXO */
+        /* RODAPÉ TRAVADO EMBAIXO E COMPATÍVEL COM BOTÕES VIRTUAIS */
         footer { 
             background: var(--wa-header); 
             padding: 10px; 
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            height: 65px; 
-            flex-shrink: 0; /* Impede o rodapé de ser esmagado */
+            min-height: 65px; 
+            flex-shrink: 0; 
             width: 100%;
+            position: sticky;
+            bottom: 0;
+            z-index: 15;
+            /* Garante afastamento seguro da barra de navegação virtual do Poco C65 */
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            box-sizing: border-box;
         }
-        .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; height: 100%; }
+        .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; min-height: 45px; }
         #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px 5px; outline: none; font-size: 16px; }
         .action-icon { color: #8696a0; font-size: 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
         .action-icon:hover { color: white; }
@@ -179,9 +191,11 @@
 </head>
 <body>
 
+    <input type="file" id="bot-avatar-uploader" style="display: none;" accept="image/*">
+
     <div id="auth-screen">
         <div class="auth-card">
-            <div class="auth-logo-container">
+            <div class="auth-logo-container" id="auth-logo-trigger" title="Clique para alterar a foto do Bot">
                 <img src="" alt="DiamanteBot" class="auth-logo-img global-bot-img">
             </div>
             <h2 id="auth-title" style="color:var(--wa-green); margin-bottom: 15px; font-weight: 700; letter-spacing: 1px;">DIAMANTE LOGIN</h2>
@@ -260,7 +274,7 @@
 
     <div id="app-main">
         <header>
-            <div class="avatar-container">
+            <div class="avatar-container" id="chat-logo-trigger" title="Clique para alterar a foto do Bot">
                 <img src="" alt="Avatar" class="avatar-img global-bot-img">
             </div>
             <div style="flex: 1;">
@@ -344,6 +358,11 @@
         const openUserMenu = document.getElementById("open-user-menu");
         const openAdminMenu = document.getElementById("open-admin-menu");
         const micBtn = document.getElementById("mic-btn");
+        
+        // Elementos de Gatilho para Alteração de Foto por Clique
+        const botAvatarUploader = document.getElementById("bot-avatar-uploader");
+        const authLogoTrigger = document.getElementById("auth-logo-trigger");
+        const chatLogoTrigger = document.getElementById("chat-logo-trigger");
 
         // Inicialização dos Bancos Locais de Dados
         if (!localStorage.getItem("diamante_users")) localStorage.setItem("diamante_users", JSON.stringify({}));
@@ -355,6 +374,26 @@
 
         // Executar carregamento visual preventivo para a tela de login herdar fundos guardados
         carregarConfiguracoesVisuais();
+
+        // ADICIONADO: Gatilhos de clique nas bolinhas do bot para abrir galeria
+        authLogoTrigger.addEventListener("click", () => botAvatarUploader.click());
+        chatLogoTrigger.addEventListener("click", () => botAvatarUploader.click());
+
+        // ADICIONADO: Captura da foto selecionada e sincronização em tempo real
+        botAvatarUploader.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64Image = evt.target.result;
+                aplicarAvataresGlobais(base64Image);
+                // Sincroniza também o campo de texto do painel admin caso esteja aberto
+                const urlInput = document.getElementById("url-bot-avatar");
+                if (urlInput) urlInput.value = base64Image;
+            };
+            reader.readAsDataURL(file);
+        });
 
         // Mostrar/Ocultar Senha
         eyeToggle.addEventListener("click", () => {
@@ -403,7 +442,7 @@
             }
         });
 
-        function efetuarLoginSessao(email, isAdmin) {
+        function efectuarLoginSessao(email, isAdmin) {
             currentUser = { email: email, isAdmin: isAdmin };
             authScreen.style.display = "none";
             appMain.style.display = "flex";
@@ -644,7 +683,6 @@
                 for (let i = 0; i < partes.length; i++) {
                     if (i % 2 === 1) {
                         const pre = document.createElement("pre");
-                        // Isolar linguagem residual se houver
                         pre.innerText = partes[i].replace(/^[a-zA-Z1-9+-]+\n/, "");
                         bubble.appendChild(pre);
                     } else {
