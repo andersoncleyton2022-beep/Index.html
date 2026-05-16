@@ -8,57 +8,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         :root {
-            --wa-bg: #0b141a; 
-            --wa-header: #202c33; 
+            --wa-bg: #0b141a;
+            --wa-header: #202c33;
             --wa-green: #00a884;
-            --wa-msg-me: #005c4b; 
-            --wa-msg-ai: #202c33; 
+            --wa-msg-me: #005c4b;
+            --wa-msg-ai: #202c33;
             --wa-text: #e9edef;
-            --wa-input: #2a3942; 
+            --wa-input: #2a3942;
             --wa-accent: #00e676;
             --main-bg-img: none;
             --chat-bg-img: none;
             --admin-bg-color: #1e2a30;
         }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        
-        /* CORREÇÃO E TRAVAMENTO DO BODY MOBILE */
-        body { 
-            background: var(--wa-bg); 
-            color: var(--wa-text); 
-            height: 100vh; 
-            height: -webkit-fill-available; /* Altura real em navegadores mobile */
-            overflow: hidden; 
-            display: flex;
-            flex-direction: column;
-            position: relative;
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--wa-bg);
+            color: var(--wa-text);
         }
-        
-        /* AUTENTICAÇÃO ESTILIZADA */
-        #auth-screen { 
-            position: fixed; 
-            inset: 0; 
-            background-color: #050a0d; 
+
+        /* AUTENTICAÇÃO */
+        #auth-screen {
+            position: fixed;
+            inset: 0;
+            background-color: #050a0d;
             background-image: var(--main-bg-img);
             background-size: cover;
             background-position: center;
-            z-index: 10000; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px; 
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .auth-card { 
-            background: rgba(32, 44, 51, 0.85); 
-            backdrop-filter: blur(10px); 
+        .auth-card {
+            background: rgba(32, 44, 51, 0.85);
+            backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            padding: 35px 30px; 
-            border-radius: 15px; 
-            width: 100%; 
-            max-width: 400px; 
-            text-align: center; 
-            border-top: 5px solid var(--wa-green); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+            padding: 35px 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-top: 5px solid var(--wa-green);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
             border-left: 1px solid rgba(255,255,255,0.05);
             border-right: 1px solid rgba(255,255,255,0.05);
         }
@@ -71,107 +67,102 @@
         .eye-btn { position: absolute; right: 15px; top: 24px; color: #8696a0; cursor: pointer; z-index: 5; }
         .btn-green { background: var(--wa-green); color: white; border: none; padding: 14px; border-radius: 30px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
-        
-        /* CORE INTERFACE COMPACTA */
-        #app-main { 
-            display: none; 
-            height: 100vh;
-            height: -webkit-fill-available;
-            flex: 1;
-            flex-direction: column; 
-            background-color: rgba(11,20,26,0.95); 
-            background-image: var(--main-bg-img); 
-            background-size: cover; 
-            background-position: center; 
-            background-blend-mode: darken; 
+
+        /* APP PRINCIPAL — flexbox coluna ocupando 100% da tela */
+        #app-main {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            background-color: rgba(11,20,26,0.95);
+            background-image: var(--main-bg-img);
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: darken;
             overflow: hidden;
-            position: relative;
+            position: fixed;
+            inset: 0;
         }
-        
-        header { 
-            background: var(--wa-header); 
-            padding: 10px 15px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            height: 60px; 
-            z-index: 10; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
+
+        header {
+            background: var(--wa-header);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 60px;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             flex-shrink: 0;
         }
         .avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #3b4a54; display: flex; align-items: center; justify-content: center; border: 2px solid var(--wa-green); cursor: pointer; transition: 0.3s; position: relative; }
         .avatar-container:hover::after { content: "\f030"; font-family: "Font Awesome 5 Free"; font-weight: 900; position: absolute; inset: 0; background: rgba(0,0,0,0.4); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* FIXAÇÃO E ROLAGEM INDEPENDENTE DO HISTÓRICO */
-        #chat-window { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            scroll-behavior: smooth; 
-            background-image: var(--chat-bg-img); 
-            background-size: cover; 
+
+        /* ÁREA DE MENSAGENS — cresce e rola sozinha */
+        #chat-window {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+            background-image: var(--chat-bg-img);
+            background-size: cover;
             background-position: center;
-            -webkit-overflow-scrolling: touch; /* Rolagem lisa no Poco */
+            -webkit-overflow-scrolling: touch;
+            min-height: 0; /* essencial para o flex funcionar corretamente */
         }
-        
-        /* MONITOR DE STATUS DA API */
+
         .status-dot-container { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8696a0; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 12px; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #b71c1c; transition: 0.3s; }
         .status-dot.online { background: var(--wa-accent); box-shadow: 0 0 6px var(--wa-accent); }
-        
-        /* ECOSSISTEMA DE BALÕES FIADO E CORRIGIDO */
+
         .bubble-wrapper { display: flex; width: 100%; gap: 8px; margin-bottom: 2px; align-items: flex-start; }
         .bubble-wrapper.me { justify-content: flex-end; }
         .bubble-wrapper.ai { justify-content: flex-start; }
         .chat-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wa-green); }
-        
-        /* AJUSTE DO BALÃO PARA INTERFACE MOBILE */
-        .bubble { 
-            max-width: 85%; 
-            padding: 10px 14px; 
-            border-radius: 10px; 
-            font-size: 15px; 
-            line-height: 1.4; 
-            position: relative; 
-            word-wrap: break-word; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
-            display: flex; 
-            flex-direction: column; 
+
+        .bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
         }
         .bubble.me { background: var(--wa-msg-me); border-top-right-radius: 0; text-align: left; }
         .bubble.ai { background: var(--wa-msg-ai); border-top-left-radius: 0; text-align: left; }
         .msg-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 6px; align-self: flex-end; }
         pre { background: #000; color: #00ff00; padding: 12px; border-radius: 8px; font-family: monospace; overflow-x: auto; margin-top: 8px; font-size: 13px; white-space: pre-wrap; text-align: left; width: 100%; border: 1px solid rgba(255,255,255,0.1); }
-        
+
         /* PROGRESSO */
         #upload-progress-container { display: none; background: var(--wa-header); padding: 10px 15px; border-bottom: 2px solid #004d40; flex-shrink: 0; }
         .progress-bar-bg { background: var(--wa-input); width: 100%; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
         .progress-bar-fill { background: var(--wa-accent); width: 0%; height: 100%; transition: width 0.3s ease; }
-        
-        /* PAINÉIS LATERAIS (DRAWERS) */
+
+        /* DRAWERS */
         .drawer { position: fixed; top: 0; right: -100%; width: 85%; max-width: 400px; height: 100%; background: #111b21; z-index: 20000; transition: 0.4s; padding: 25px; border-left: 2px solid var(--wa-green); overflow-y: auto; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
         .drawer.active { right: 0; }
         .section-card { background: var(--admin-bg-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid var(--wa-green); transition: background 0.3s; }
         .section-card.admin-card { border-left-color: #ff3d00; }
-        
-        /* RODAPÉ TRAVADO EMBAIXO E COMPATÍVEL COM BOTÕES VIRTUAIS */
-        footer { 
-            background: var(--wa-header); 
-            padding: 10px; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            min-height: 65px; 
-            flex-shrink: 0; 
-            width: 100%;
-            position: sticky;
-            bottom: 0;
-            z-index: 15;
+
+        /* FOOTER FIXO EMBAIXO */
+        footer {
+            background: var(--wa-header);
+            padding: 10px;
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            width: 100%;
+            border-top: 1px solid rgba(255,255,255,0.05);
             box-sizing: border-box;
         }
         .input-bar { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; min-height: 45px; }
@@ -180,7 +171,7 @@
         .action-icon:hover { color: white; }
         .action-icon.mic-active { color: #ff3d00; animation: pulseMic 1.5s infinite; }
         .badge-file { display: inline-block; background: #004d40; color: #00e676; padding: 3px 8px; border-radius: 5px; font-size: 12px; margin-top: 5px; width: fit-content; }
-        
+
         @keyframes pulseMic {
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.15); opacity: 0.7; }
@@ -236,29 +227,29 @@
         </div>
         <div class="section-card admin-card">
             <b style="color: var(--wa-accent); display: block; margin-bottom: 8px;">Identidade Visual e Customização:</b>
-            
+
             <label style="font-size:11px; display:block;">URL da Imagem do DiamanteBot:</label>
             <input type="text" id="url-bot-avatar" class="auth-input" placeholder="Link direto da imagem do Bot">
-            
+
             <label style="font-size:11px; display:block;">Papel de Parede - Geral e Login:</label>
             <input type="text" id="url-bg-main" class="auth-input" placeholder="Link da imagem de fundo externa">
-            
+
             <label style="font-size:11px; display:block;">Papel de Parede - Chat Interno:</label>
             <input type="text" id="url-bg-chat" class="auth-input" placeholder="Link da imagem interna do chat">
-            
+
             <label style="font-size:11px; display:block; margin-top:8px;">Cor dos Botões:</label>
             <input type="color" id="color-btn-admin" class="auth-input" style="height:40px; padding:2px; cursor:pointer;">
-            
+
             <label style="font-size:11px; display:block; margin-top:8px;">Cor de Fundo do Painel Admin:</label>
             <input type="color" id="color-bg-admin" class="auth-input" style="height:40px; padding:2px; cursor:pointer;">
-            
+
             <label style="font-size:11px; display:block; margin-top:5px;">Formato dos Botões:</label>
             <select id="shape-btn-admin" class="auth-input" style="background-color: var(--wa-input); color:white; margin: 0 0 10px 0;">
                 <option value="30px">Totalmente Arredondado (Padrão)</option>
                 <option value="12px">Quadrado Arredondado (Moderno)</option>
                 <option value="4px">Quadrado Clássico</option>
             </select>
-            
+
             <button class="btn-green" style="background:#ff3d00; height:38px; font-size:12px; padding: 0 10px;" id="save-admin-visuals">SALVAR PROPRIEDADES</button>
         </div>
         <div class="section-card admin-card">
@@ -308,12 +299,12 @@
                     <i class="fa-solid fa-paperclip" title="Anexar Arquivo Individual ou ZIP do Projeto"></i>
                 </label>
                 <input type="file" id="file-upload" style="display: none;" accept=".zip,.rar,.7z,.txt,.js,.html,.css,.json,.py">
-                
+
                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
                     <input type="text" id="msg-input" placeholder="Envie mensagens ou anexe o ZIP do seu projeto...">
                     <span id="file-badge" class="badge-file" style="display: none;"></span>
                 </div>
-                
+
                 <div class="action-icon" id="mic-btn" title="Grave sua voz (Transforma em texto)">
                     <i class="fa-solid fa-microphone"></i>
                 </div>
@@ -327,7 +318,7 @@
     <script>
         const MASTER_ADMIN_EMAIL = "andersoncleyton2022@gmail.com";
         const MASTER_ADMIN_PASS = "339317";
-        const DEFAULT_BOT_AVATAR = "https://i.imgur.com/6VB8g9t.png"; 
+        const DEFAULT_BOT_AVATAR = "https://i.imgur.com/6VB8g9t.png";
 
         let currentUser = null;
         let authMode = "login";
@@ -335,7 +326,6 @@
         let attachedFileName = "";
         let recognition = null;
 
-        // Mapeamento Estrito do DOM
         const authScreen = document.getElementById("auth-screen");
         const appMain = document.getElementById("app-main");
         const authTitle = document.getElementById("auth-title");
@@ -357,13 +347,10 @@
         const openUserMenu = document.getElementById("open-user-menu");
         const openAdminMenu = document.getElementById("open-admin-menu");
         const micBtn = document.getElementById("mic-btn");
-        
-        // Elementos de Gatilho para Alteração de Foto por Clique
         const botAvatarUploader = document.getElementById("bot-avatar-uploader");
         const authLogoTrigger = document.getElementById("auth-logo-trigger");
         const chatLogoTrigger = document.getElementById("chat-logo-trigger");
 
-        // Inicialização dos Bancos Locais de Dados
         if (!localStorage.getItem("diamante_users")) localStorage.setItem("diamante_users", JSON.stringify({}));
         if (!localStorage.getItem("diamante_admins")) {
             const initialAdmins = {};
@@ -371,10 +358,8 @@
             localStorage.setItem("diamante_admins", JSON.stringify(initialAdmins));
         }
 
-        // Executar carregamento visual preventivo seguro
         carregarConfiguracoesVisuais();
 
-        // Gatilhos de clique nas bolinhas do bot para abrir galeria (com stopPropagation para evitar conflitos)
         authLogoTrigger.addEventListener("click", (e) => {
             e.stopPropagation();
             botAvatarUploader.click();
@@ -384,11 +369,9 @@
             botAvatarUploader.click();
         });
 
-        // Captura da foto selecionada e sincronização em tempo real
         botAvatarUploader.addEventListener("change", function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const base64Image = evt.target.result;
@@ -399,14 +382,12 @@
             reader.readAsDataURL(file);
         });
 
-        // Mostrar/Ocultar Senha
         eyeToggle.addEventListener("click", () => {
             const isPass = authPass.type === "password";
             authPass.type = isPass ? "text" : "password";
             eyeToggle.className = isPass ? "fa-solid fa-eye-slash eye-btn" : "fa-solid fa-eye eye-btn";
         });
 
-        // Alternar visual Login / Registro
         switchAuthMode.addEventListener("click", () => {
             authMode = (authMode === "login") ? "register" : "login";
             authTitle.innerText = authMode === "login" ? "DIAMANTE LOGIN" : "DIAMANTE REGISTRO";
@@ -414,7 +395,6 @@
             switchAuthMode.innerText = authMode === "login" ? "Não tem conta? Registre-se aqui" : "Já possui uma conta? Entre aqui";
         });
 
-        // Autenticação Autônoma - CORRIGIDA E PROTEGIDA
         loginBtn.addEventListener("click", () => {
             const email = authEmail.value.trim().toLowerCase();
             const pass = authPass.value;
@@ -449,7 +429,6 @@
             }
         });
 
-        // FUNÇÃO TOTALMENTE SINCRO-CORRIGIDA AQUI ABAIXO
         function efetuarLoginSessao(email, isAdmin) {
             currentUser = { email: email, isAdmin: isAdmin };
             authScreen.style.display = "none";
@@ -476,7 +455,6 @@
             authPass.value = "";
         });
 
-        // Controladores de gavetas (Drawers)
         openUserMenu.addEventListener("click", () => userDrawer.classList.add("active"));
         document.getElementById("close-user-btn").addEventListener("click", () => userDrawer.classList.remove("active"));
         openAdminMenu.addEventListener("click", () => adminDrawer.classList.add("active"));
@@ -501,10 +479,10 @@
             const btnColor = localStorage.getItem("diamante_btn_color") || "#00a884";
             const btnShape = localStorage.getItem("diamante_btn_shape") || "30px";
             const adminBgColor = localStorage.getItem("diamante_admin_bg_color") || "#1e2a30";
-            
+
             document.documentElement.style.setProperty('--wa-green', btnColor);
             document.documentElement.style.setProperty('--admin-bg-color', adminBgColor);
-            
+
             document.querySelectorAll(".btn-green").forEach(btn => btn.style.borderRadius = btnShape);
             const sendBtnEl = document.getElementById("send-btn");
             if (sendBtnEl) sendBtnEl.style.borderRadius = btnShape === "30px" ? "50%" : btnShape;
@@ -517,7 +495,7 @@
             document.getElementById("url-bot-avatar").value = localStorage.getItem("diamante_asset_avatar") || "";
             document.getElementById("url-bg-main").value = localStorage.getItem("diamante_asset_bgmain") || "";
             document.getElementById("url-bg-chat").value = localStorage.getItem("diamante_asset_bgchat") || "";
-            
+
             document.getElementById("color-btn-admin").value = localStorage.getItem("diamante_btn_color") || "#00a884";
             document.getElementById("color-bg-admin").value = localStorage.getItem("diamante_admin_bg_color") || "#1e2a30";
             document.getElementById("shape-btn-admin").value = localStorage.getItem("diamante_btn_shape") || "30px";
@@ -536,11 +514,11 @@
             localStorage.setItem("diamante_key_3", document.getElementById("admin-key-3").value.trim());
             localStorage.setItem("diamante_asset_bgmain", document.getElementById("url-bg-main").value.trim());
             localStorage.setItem("diamante_asset_bgchat", document.getElementById("url-bg-chat").value.trim());
-            
+
             localStorage.setItem("diamante_btn_color", document.getElementById("color-btn-admin").value);
             localStorage.setItem("diamante_admin_bg_color", document.getElementById("color-bg-admin").value);
             localStorage.setItem("diamante_btn_shape", document.getElementById("shape-btn-admin").value);
-            
+
             aplicarAvataresGlobais(document.getElementById("url-bot-avatar").value.trim());
             carregarConfiguracoesVisuais();
             atualizarMonitorStatusAPI();
@@ -576,7 +554,6 @@
             }
         }
 
-        // Histórico Local e Backups
         document.getElementById("backup-chat-btn").addEventListener("click", () => {
             const historico = localStorage.getItem(`diamante_hist_${currentUser.email}`);
             if (!historico || historico === "[]") return alert("Histórico de mensagens vazio.");
@@ -600,7 +577,6 @@
             }
         });
 
-        // Extração de ZIP e arquivos individuais
         fileUpload.addEventListener("change", function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -611,7 +587,7 @@
 
             if (file.name.endsWith('.zip')) {
                 uploadProgressContainer.style.display = "block";
-                uploadProgressBar.style.width = "15%" ;
+                uploadProgressBar.style.width = "15%";
                 uploadPercentage.innerText = "15%";
 
                 const reader = new FileReader();
@@ -622,7 +598,7 @@
                     JSZip.loadAsync(evt.target.result).then(function(zip) {
                         uploadProgressBar.style.width = "70%";
                         uploadPercentage.innerText = "70%";
-                        
+
                         let totalFilesText = `--- CONTEÚDO EXTRAÍDO DO ZIP DO PROJETO: ${file.name} ---\n`;
                         const fileReadPromises = [];
                         const extensoesSuportadas = ['.html', '.css', '.js', '.py', '.txt', '.json', '.php', '.ts', '.jsx', '.tsx', '.c', '.cpp', '.cs', '.java'];
@@ -755,7 +731,6 @@
             await processarRespostaGemini(promptFinalParaIA);
         }
 
-        // MOTOR DE HISTÓRICO ATIVO (MULTI-TURN) COM SUPORTE A LOGS DE CÓDIGO
         async function processarRespostaGemini(ultimoPrompt) {
             const chavesDisponiveis = [
                 localStorage.getItem("diamante_key_1") || "",
@@ -776,12 +751,11 @@
 
             const historicoLocal = JSON.parse(localStorage.getItem(`diamante_hist_${currentUser.email}`)) || [];
             let apiContents = [];
-            
-            // Reduz e monta o histórico das últimas 20 mensagens em formato compatível com a API do Gemini
+
             const historicoReduzido = historicoLocal.slice(-20);
             historicoReduzido.forEach((msg, index) => {
-                if (index === historicoReduzido.length - 1 && msg.sender === "me") return; 
-                
+                if (index === historicoReduzido.length - 1 && msg.sender === "me") return;
+
                 apiContents.push({
                     role: msg.sender === "me" ? "user" : "model",
                     parts: [{ text: msg.text }]
@@ -811,7 +785,7 @@
                     if (data.candidates && data.candidates[0].content.parts[0].text) {
                         textoRespostaIA = data.candidates[0].content.parts[0].text;
                         sucesso = true;
-                        break; 
+                        break;
                     }
                 } catch (err) {
                     console.warn(`A chave na posição ${i + 1} falhou. Tentando próxima de contingência...`);
@@ -827,7 +801,6 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        // Mecanismo do Microfone (Áudio para Texto)
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -865,7 +838,7 @@
                 }
             });
         } else {
-            micBtn.style.display = "none"; 
+            micBtn.style.display = "none";
         }
     </script>
 </body>
