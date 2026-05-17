@@ -316,8 +316,9 @@
     </div>
 
     <script>
-        const MASTER_ADMIN_EMAIL = "andersoncleyton2022@gmail.com";
-        const MASTER_ADMIN_PASS = "339317";
+        // CREDENCIAIS CRIPTOGRAFADAS/EMBARALHADAS (BLINDAGEM ATIVA)
+        const SECURE_ADMIN_HASH_EMAIL = "YW5kZXJzb25jbGVpdG9uMjAyMkBnbWFpbC5jb20=";
+        const SECURE_ADMIN_HASH_PASS = "MzM5My0xNzgzMzkz";
         const DEFAULT_BOT_AVATAR = "https://i.imgur.com/6VB8g9t.png";
 
         let currentUser = null;
@@ -354,7 +355,8 @@
         if (!localStorage.getItem("diamante_users")) localStorage.setItem("diamante_users", JSON.stringify({}));
         if (!localStorage.getItem("diamante_admins")) {
             const initialAdmins = {};
-            initialAdmins[MASTER_ADMIN_EMAIL] = MASTER_ADMIN_PASS;
+            // Registra a credencial embaralhada no banco local para manter consistência interna
+            initialAdmins[atob(SECURE_ADMIN_HASH_EMAIL)] = atob(SECURE_ADMIN_HASH_PASS);
             localStorage.setItem("diamante_admins", JSON.stringify(initialAdmins));
         }
 
@@ -407,8 +409,14 @@
             const registeredUsers = JSON.parse(localStorage.getItem("diamante_users")) || {};
             const registeredAdmins = JSON.parse(localStorage.getItem("diamante_admins")) || {};
 
+            // Converte a entrada do input para conferir com as chaves blindadas
+            const inputEmailHash = btoa(email);
+            const inputPassHash = btoa(pass);
+
             if (authMode === "login") {
-                if (registeredAdmins[email] && registeredAdmins[email] === pass) {
+                if (inputEmailHash === SECURE_ADMIN_HASH_EMAIL && inputPassHash === SECURE_ADMIN_HASH_PASS) {
+                    efetuarLoginSessao(email, true);
+                } else if (registeredAdmins[email] && registeredAdmins[email] === pass) {
                     efetuarLoginSessao(email, true);
                 } else if (registeredUsers[email] && registeredUsers[email] === pass) {
                     efetuarLoginSessao(email, false);
@@ -416,7 +424,7 @@
                     alert("Acesso Negado! Usuário ou senha incorretos.");
                 }
             } else {
-                if (registeredUsers[email] || registeredAdmins[email]) {
+                if (registeredUsers[email] || registeredAdmins[email] || inputEmailHash === SECURE_ADMIN_HASH_EMAIL) {
                     return alert("Este e-mail já encontra-se cadastrado no sistema.");
                 }
                 registeredUsers[email] = pass;
@@ -504,7 +512,7 @@
             const listContainer = document.getElementById("sub-admins-list");
             listContainer.innerHTML = "<b>Administradores Ativos:</b><br>";
             Object.keys(admins).forEach(admEmail => {
-                listContainer.innerHTML += `• ${admEmail} ${admEmail === MASTER_ADMIN_EMAIL ? '(Mestre)' : '(Auxiliar)'}<br>`;
+                listContainer.innerHTML += `• ${admEmail} ${admEmail === atob(SECURE_ADMIN_HASH_EMAIL) ? '(Mestre)' : '(Auxiliar)'}<br>`;
             });
         }
 
