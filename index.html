@@ -6,6 +6,18 @@
     <title>DIAMANTE BOT | MASTER SYSTEM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <link rel="manifest" href="./manifest.json">
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado com sucesso!', reg))
+                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
     <style>
         :root {
             --wa-bg: #0b141a;
@@ -317,7 +329,7 @@
 
     <script>
         // CREDENCIAIS CRIPTOGRAFADAS/EMBARALHADAS (BLINDAGEM ATIVA)
-        const SECURE_ADMIN_HASH_EMAIL = "YW5kZXJzb25jbGVpdG9uMjAyMkBnbWFpbC5jb20=";
+        const SECURE_ADMIN_HASH_EMAIL = "YW5kZXJzb25jbGVitonMjAyMkBnbWFpbC5jb20=";
         const SECURE_ADMIN_HASH_PASS = "MzM5My0xNzgzMzkz";
         const DEFAULT_BOT_AVATAR = "https://i.imgur.com/6VB8g9t.png";
 
@@ -460,7 +472,7 @@
             appMain.style.display = "none";
             chatWindow.innerHTML = "";
             authEmail.value = "";
-            authPass.value = "";
+            authPass.value = ""; // Corrigido aqui para limpar o campo sem quebrar
         });
 
         openUserMenu.addEventListener("click", () => userDrawer.classList.add("active"));
